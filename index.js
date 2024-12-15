@@ -46,11 +46,11 @@ mongoose
 app.use(cors());
 app.use(express.json());
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 минут
-  max: 100, // макс. 100 запросов с одного IP
-  message: "Слишком много запросов, попробуйте позже.",
-});
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 минут
+//   max: 100, // макс. 100 запросов с одного IP
+//   message: "Слишком много запросов, попробуйте позже.",
+// });
 app.use(limiter);
 
 app.post("/webapp-data", handleWebAppData);
