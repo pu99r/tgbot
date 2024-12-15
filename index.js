@@ -5,14 +5,17 @@ const TelegramBot = require("node-telegram-bot-api");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 
+const {
+  handleWebAppData,
+  handleUpdateSpins,
+} = require("./routes/appPostRoutes");
+const { setupAdminHandlers } = require("./admin/adminHandlers");
+
 const User = require("./models/User");
-const ADMIN_ID = 1370034279;
 const app = express();
+
 const port = process.env.PORT || 3000;
-
 const CHANNEL_ID = process.env.CHANNEL_ID;
-
-let isWaitingForMessage = false;
 const requiredEnv = [
   "TELEGRAM_TOKEN",
   "BOT_USERNAME",
@@ -49,19 +52,11 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-function parseInitData(initData) {
-  try {
-    const params = new URLSearchParams(initData);
-    const userParam = params.get("user");
-    if (!userParam) return null;
-    return JSON.parse(decodeURIComponent(userParam));
-  } catch (error) {
-    console.error("Ошибка парсинга initData:", error);
-    return null;
-  }
-}
+app.post("/webapp-data", handleWebAppData);
+app.post("/update-spins", handleUpdateSpins);
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
+setupAdminHandlers(bot);
 
 bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
   const chatId = msg.chat.id;
@@ -139,122 +134,6 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
       chatId,
       "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже."
     );
-  }
-});
-
-async function sendSubscriptionPrompt(chatId, user) {
-  const welcomeText = `
-👋 Добро пожаловать! Пройдите небольшую авторизацию в нашей лучшей Telegram-рулетке по WB.
-
-1) Подпишитесь на наш новостной канал
-2) Нажмите «Продолжить»
-  `;
-
-  const inlineKeyboard = [
-    [
-      {
-        text: "Перейти на канал",
-        url: `${process.env.MAINCHANNEL}`, // ваша реальная ссылка на канал
-      },
-    ],
-    [
-      {
-        text: "Продолжить",
-        callback_data: "check_subscribe", // при нажатии - проверка подписки
-      },
-    ],
-  ];
-
-  try {
-    // Отправляем сообщение и сохраняем message_id отправленного ботом сообщения
-    const sentMessage = await bot.sendMessage(chatId, welcomeText, {
-      reply_markup: { inline_keyboard: inlineKeyboard },
-      parse_mode: "HTML", // если используете форматирование
-    });
-
-    // Можно сохранить sentMessage.message_id в базе данных, если нужно
-    // Например, добавить поле в модель User для хранения message_id
-    // Это опционально и зависит от вашей логики
-  } catch (error) {
-    console.error(
-      "Ошибка при отправке приветственного сообщения с подпиской:",
-      error
-    );
-  }
-}
-bot.onText(/\/stats/, async (msg) => {
-  const chatId = msg.chat.id;
-
-  if (chatId !== ADMIN_ID) {
-    return bot.sendMessage(chatId, "У вас нет доступа к этой команде.");
-  }
-
-  try {
-    const users = await User.find({}, "telegramId username");
-    const userCount = users.length;
-
-    const message = `👥 <b>Пользователи бота: ${userCount}</b>`;
-
-    await bot.sendMessage(chatId, message, { parse_mode: "HTML" });
-  } catch (error) {
-    console.error("Ошибка при выполнении команды /stats:", error);
-    bot.sendMessage(chatId, "Произошла ошибка при получении статистики.");
-  }
-});
-
-bot.onText(/\/mes/, async (msg) => {
-  const chatId = msg.chat.id;
-
-  if (chatId !== ADMIN_ID) {
-    return bot.sendMessage(chatId, "У вас нет доступа к этой команде.");
-  }
-
-  isWaitingForMessage = true;
-  await bot.sendMessage(
-    chatId,
-    "✉️ Введите сообщение для рассылки всем пользователям. Для отмены введите <b>-</b>.",
-    { parse_mode: "HTML" }
-  );
-});
-
-bot.on("message", async (msg) => {
-  const chatId = msg.chat.id;
-
-  if (chatId !== ADMIN_ID || !isWaitingForMessage || msg.text.startsWith("/"))
-    return;
-
-  const text = msg.text.trim();
-
-  if (text === "-") {
-    isWaitingForMessage = false;
-    return bot.sendMessage(chatId, "❌ Рассылка отменена.");
-  }
-
-  try {
-    const users = await User.find({}, "telegramId");
-    let successCount = 0;
-
-    for (const user of users) {
-      try {
-        await bot.sendMessage(user.telegramId, text, { parse_mode: "HTML" });
-        successCount++;
-      } catch (error) {
-        console.error(
-          `Ошибка при отправке пользователю ${user.telegramId}:`,
-          error
-        );
-      }
-    }
-
-    isWaitingForMessage = false;
-    await bot.sendMessage(
-      chatId,
-      `✅ Сообщение отправлено <b>${successCount}</b> пользователям.`,
-      { parse_mode: "HTML" }
-    );
-  } catch (error) {
-    console.error("Ошибка при выполнении массовой рассылки:", error);
-    bot.sendMessage(chatId, "Произошла ошибка при выполнении рассылки.");
   }
 });
 
@@ -445,104 +324,46 @@ async function sendMainFunctionalityMessage(chatId, user, messageId = null) {
   }
 }
 
-app.post("/webapp-data", async (req, res) => {
+async function sendSubscriptionPrompt(chatId, user) {
+  const welcomeText = `
+👋 Добро пожаловать! Пройдите небольшую авторизацию в нашей лучшей Telegram-рулетке по WB.
+
+1) Подпишитесь на наш новостной канал
+2) Нажмите «Продолжить»
+  `;
+
+  const inlineKeyboard = [
+    [
+      {
+        text: "Перейти на канал",
+        url: `${process.env.MAINCHANNEL}`, // ваша реальная ссылка на канал
+      },
+    ],
+    [
+      {
+        text: "Продолжить",
+        callback_data: "check_subscribe", // при нажатии - проверка подписки
+      },
+    ],
+  ];
+
   try {
-    const { initData } = req.body;
-    if (!initData) {
-      return res
-        .status(400)
-        .json({ success: false, message: "initData не передан." });
-    }
-
-    const userObj = parseInitData(initData);
-    if (!userObj) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Невалидный initData." });
-    }
-
-    const telegramId = userObj.id;
-    const user = await User.findOne({ telegramId });
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Пользователь не найден." });
-    }
-
-    const referralsCount = await User.countDocuments({ referredBy: user._id });
-    const userReferralCode = `ref_${user.telegramId}`;
-
-    res.send({
-      success: true,
-      referralCode: userReferralCode,
-      botUsername: process.env.BOT_USERNAME,
-      referralsCount,
-      spins: user.spins,
+    // Отправляем сообщение и сохраняем message_id отправленного ботом сообщения
+    const sentMessage = await bot.sendMessage(chatId, welcomeText, {
+      reply_markup: { inline_keyboard: inlineKeyboard },
+      parse_mode: "HTML", // если используете форматирование
     });
+
+    // Можно сохранить sentMessage.message_id в базе данных, если нужно
+    // Например, добавить поле в модель User для хранения message_id
+    // Это опционально и зависит от вашей логики
   } catch (error) {
-    console.error("Ошибка /webapp-data:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Внутренняя ошибка сервера." });
+    console.error(
+      "Ошибка при отправке приветственного сообщения с подпиской:",
+      error
+    );
   }
-});
-
-app.post("/update-spins", async (req, res) => {
-  try {
-    const { initData, operation } = req.body;
-
-    if (!initData || !operation) {
-      return res.status(400).json({
-        success: false,
-        message: "Необходимо передать initData и operation (plus/minus).",
-      });
-    }
-
-    if (!["plus", "minus"].includes(operation)) {
-      return res.status(400).json({
-        success: false,
-        message: "operation должно быть 'plus' или 'minus'.",
-      });
-    }
-
-    const userObj = parseInitData(initData);
-    if (!userObj) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Невалидный initData." });
-    }
-
-    const telegramId = userObj.id;
-    const user = await User.findOne({ telegramId });
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Пользователь не найден." });
-    }
-
-    if (operation === "plus") {
-      user.spins += 1;
-    } else {
-      // ограничиваем, чтобы spins не уходил в минус
-      user.spins = Math.max(user.spins - 1, 0);
-    }
-
-    await user.save();
-
-    return res.json({
-      success: true,
-      spins: user.spins,
-      message: `Spins успешно ${
-        operation === "plus" ? "увеличены" : "уменьшены"
-      }.`,
-    });
-  } catch (error) {
-    console.error("Ошибка /update-spins:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Внутренняя ошибка сервера." });
-  }
-});
+}
 
 app.use((req, res) => {
   res.status(404).send({ success: false, message: "Endpoint not found" });
