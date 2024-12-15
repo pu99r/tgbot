@@ -51,7 +51,7 @@ app.use(express.json());
 //   max: 100, // макс. 100 запросов с одного IP
 //   message: "Слишком много запросов, попробуйте позже.",
 // });
-app.use(limiter);
+// app.use(limiter);
 
 app.post("/webapp-data", handleWebAppData);
 app.post("/update-spins", handleUpdateSpins);
