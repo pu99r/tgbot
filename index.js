@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const TelegramBot = require("node-telegram-bot-api");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
+const path = require("path");
 
 const {
   handleWebAppData,
@@ -64,7 +65,6 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
     msg.from.username ||
     `${msg.from.first_name || ""} ${msg.from.last_name || ""}`.trim();
 
-  // Извлекаем реферальный код, если он есть
   let referredBy = null;
   if (match[1] && match[1].startsWith("ref_")) {
     const referrerTelegramId = match[1].replace("ref_", "");
@@ -80,12 +80,9 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
   }
 
   try {
-    // Проверяем, существует ли пользователь в базе данных
     let user = await User.findOne({ telegramId: chatId });
 
     if (user) {
-      // Пользователь уже существует
-      // Проверяем статус подписки
       let memberStatus;
       try {
         const res = await bot.getChatMember(CHANNEL_ID, chatId);
@@ -97,14 +94,11 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
       }
 
       if (["member", "administrator", "creator"].includes(memberStatus)) {
-        // Пользователь подписан, отправляем основное сообщение
         await sendMainFunctionalityMessage(chatId, user);
       } else {
-        // Пользователь не подписан, отправляем сообщение с предложением подписаться
         await sendSubscriptionPrompt(chatId, user);
       }
     } else {
-      // Новый пользователь, создаём запись в базе данных
       user = new User({
         telegramId: chatId,
         username: username,
@@ -114,7 +108,6 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
       await user.save();
       console.log(`Новый пользователь создан: ${username} (ID: ${chatId})`);
 
-      // Если есть реферер — добавляем текущего пользователя к его referrals и +1 spin рефереру
       if (referredBy) {
         await User.findByIdAndUpdate(referredBy, {
           $push: { referrals: user._id },
@@ -125,7 +118,6 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
         );
       }
 
-      // Отправляем приветственное сообщение с предложением подписаться
       await sendSubscriptionPrompt(chatId, user);
     }
   } catch (error) {
@@ -149,13 +141,11 @@ bot.on("callback_query", async (query) => {
 
   if (data === "check_subscribe") {
     try {
-      // Немедленно ответить на callback-запрос
       await bot.answerCallbackQuery(callbackQueryId, {
         text: "⚠️ Пожалуйста, ожидайте, мы проверяем!",
       });
       console.log(`Ответ на callback_query ${callbackQueryId} отправлен`);
 
-      // Проверяем статус подписки
       let memberStatus;
       try {
         const res = await bot.getChatMember(CHANNEL_ID, chatId);
@@ -166,15 +156,12 @@ bot.on("callback_query", async (query) => {
         memberStatus = "left";
       }
 
-      // Получаем пользователя из базы данных
       const user = await User.findOne({ telegramId: chatId });
 
       if (["member", "administrator", "creator"].includes(memberStatus)) {
-        // Пользователь подписан, отправляем основное сообщение
         await sendMainFunctionalityMessage(chatId, user, messageId);
       } else {
-        // Пользователь не подписан, обновляем сообщение с предложением подписаться
-        const text = `
+        const newText = `
 Увы, Вы не подписаны на наш Telegram-канал.
 
 Подпишитесь и нажмите «Продолжить».
@@ -183,83 +170,57 @@ bot.on("callback_query", async (query) => {
           [
             {
               text: "Перейти на канал",
-              url: "https://t.me/+78tt3taFIjA0Njky", // замените на вашу реальную ссылку
+              url: "https://t.me/+78tt3taFIjA0Njky",
             },
           ],
           [
             {
               text: "Продолжить",
-              callback_data: "check_subscribe", // можно оставить ту же callback_data
+              callback_data: "check_subscribe",
             },
           ],
         ];
 
         try {
-          await bot.editMessageText(text, {
-            chat_id: chatId,
-            message_id: messageId,
-            reply_markup: { inline_keyboard: inlineKeyboard },
-            parse_mode: "HTML", // если используете форматирование
+          await bot.deleteMessage(chatId, messageId);
+
+          const imagePath = path.join(__dirname, "img", "pursh.jpg");
+          await bot.sendPhoto(chatId, imagePath, {
+            caption: newText,
+            parse_mode: "HTML",
+            reply_markup: { inline_keyboard: inlineKeyboard }
           });
-          console.log(
-            `Сообщение для пользователя ${chatId} обновлено с предложением подписаться.`
-          );
-        } catch (editError) {
-          if (
-            editError.response &&
-            editError.response.body &&
-            editError.response.body.description &&
-            editError.response.body.description.includes(
-              "message is not modified"
-            )
-          ) {
-            // Игнорируем ошибку, если сообщение не изменилось
-            console.log(
-              "Попытка изменить сообщение на идентичное. Ошибка игнорирована."
-            );
-          } else {
-            // Обработка других ошибок
-            throw editError; // перекидываем ошибку в общий catch
-          }
+        } catch (error) {
+          console.error("Ошибка при отправке нового сообщения:", error);
         }
       }
     } catch (error) {
       console.error("Ошибка при обработке callback_query:", error);
-      // Проверяем, является ли ошибка "message is not modified"
-      if (
-        error.response &&
-        error.response.body &&
-        error.response.body.description &&
-        error.response.body.description.includes("message is not modified")
-      ) {
-        // Не отправляем дополнительное сообщение пользователю
-      } else {
-        // В случае других ошибок уведомляем пользователя
-        await bot.sendMessage(
-          chatId,
-          "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже."
-        );
-      }
+      await bot.sendMessage(
+        chatId,
+        "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже."
+      );
     }
   }
 });
 
 async function sendMainFunctionalityMessage(chatId, user, messageId = null) {
+
+  if (messageId) {
+    try {
+      await bot.deleteMessage(chatId, messageId);
+      console.log(`Сообщение с ID ${messageId} удалено.`);
+    } catch (err) {
+      console.error(`Ошибка при удалении сообщения с ID ${messageId}:`, err);
+    }
+  }
   try {
-    // Считаем число рефералов у текущего пользователя
     const referralsCount = await User.countDocuments({ referredBy: user._id });
-
-    // Формируем динамический рефкод:
     const userReferralCode = `ref_${user.telegramId}`;
-
-    // Формируем реферальную ссылку:
     const referralLink = `https://t.me/${process.env.BOT_USERNAME}?start=${userReferralCode}`;
-
-    // Обновляем количество вращений, если необходимо
     user.spins = user.spins || 0;
     await user.save();
 
-    // Кнопки
     const webAppButton = {
       text: "Открыть приложение",
       web_app: { url: process.env.WEB_APP_URL },
@@ -267,12 +228,12 @@ async function sendMainFunctionalityMessage(chatId, user, messageId = null) {
 
     const newsButton = {
       text: "Новости",
-      url: process.env.MAINCHANNEL, // Ссылка на основной канал
+      url: process.env.MAINCHANNEL,
     };
 
     const reviewsButton = {
       text: "Отзывы",
-      url: process.env.OTZOVCHANNEL, // Ссылка на канал отзывов
+      url: process.env.OTZOVCHANNEL,
     };
 
     const message = `
@@ -294,27 +255,17 @@ async function sendMainFunctionalityMessage(chatId, user, messageId = null) {
       inline_keyboard: [[webAppButton], [newsButton, reviewsButton]],
     };
 
-    if (messageId) {
-      // Если messageId передан, редактируем существующее сообщение
-      await bot.editMessageText(message, {
-        chat_id: chatId,
-        message_id: messageId,
-        parse_mode: "HTML",
-        disable_web_page_preview: true,
-        reply_markup: replyMarkup,
-      });
-      console.log(
-        `Сообщение для пользователя ${chatId} обновлено с основной функциональностью.`
-      );
-    } else {
-      // Иначе отправляем новое сообщение
-      await bot.sendMessage(chatId, message, {
-        parse_mode: "HTML",
-        disable_web_page_preview: true,
-        reply_markup: replyMarkup,
-      });
-      console.log(`Основное сообщение отправлено пользователю ${chatId}.`);
-    }
+    const imagePath = path.join(__dirname, "img", "main.jpg");
+
+    await bot.sendPhoto(chatId, imagePath, {
+      caption: message,
+      parse_mode: "HTML",
+      reply_markup: replyMarkup,
+    });
+
+    console.log(
+      `Основное сообщение с изображением отправлено пользователю ${chatId}.`
+    );
   } catch (error) {
     console.error("Ошибка в sendMainFunctionalityMessage:", error);
     await bot.sendMessage(
@@ -330,33 +281,35 @@ async function sendSubscriptionPrompt(chatId, user) {
 
 1) Подпишитесь на наш новостной канал
 2) Нажмите «Продолжить»
-  `;
+`;
 
   const inlineKeyboard = [
     [
       {
         text: "Перейти на канал",
-        url: `${process.env.MAINCHANNEL}`, // ваша реальная ссылка на канал
+        url: process.env.MAINCHANNEL,
       },
     ],
     [
       {
         text: "Продолжить",
-        callback_data: "check_subscribe", // при нажатии - проверка подписки
+        callback_data: "check_subscribe",
       },
     ],
   ];
 
+  const imagePath = path.join(__dirname, "img", "pursh.jpg");
+
   try {
-    // Отправляем сообщение и сохраняем message_id отправленного ботом сообщения
-    const sentMessage = await bot.sendMessage(chatId, welcomeText, {
+    await bot.sendPhoto(chatId, imagePath, {
+      caption: welcomeText,
+      parse_mode: "HTML",
       reply_markup: { inline_keyboard: inlineKeyboard },
-      parse_mode: "HTML", // если используете форматирование
     });
 
-    // Можно сохранить sentMessage.message_id в базе данных, если нужно
-    // Например, добавить поле в модель User для хранения message_id
-    // Это опционально и зависит от вашей логики
+    console.log(
+      `Приветственное сообщение с изображением отправлено пользователю ${chatId}.`
+    );
   } catch (error) {
     console.error(
       "Ошибка при отправке приветственного сообщения с подпиской:",
