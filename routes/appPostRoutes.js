@@ -1,5 +1,9 @@
 const User = require("../models/User");
 
+const formatDate = (date) => {
+  const pad = (n) => (n < 10 ? `0${n}` : n);
+  return `${pad(date.getDate())}:${pad(date.getMonth() + 1)}:${date.getFullYear()}_${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+};
 const parseInitData = (initData) => {
   try {
     const params = new URLSearchParams(initData);
@@ -141,7 +145,7 @@ const handleGift = async (req, res) => {
     }
 
     // Обновление поля registrationDate
-    user.registrationDate = new Date();
+    user.registrationDate = formatDate(new Date())
     await user.save();
 
     return res.json({

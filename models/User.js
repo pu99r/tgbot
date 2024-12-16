@@ -1,4 +1,10 @@
+// models/User.js
 const mongoose = require("mongoose");
+
+const formatDate = (date) => {
+  const pad = (n) => (n < 10 ? `0${n}` : n);
+  return `${pad(date.getDate())}:${pad(date.getMonth() + 1)}:${date.getFullYear()}_${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+};
 
 const UserSchema = new mongoose.Schema(
   {
@@ -11,8 +17,11 @@ const UserSchema = new mongoose.Schema(
       default: null,
     },
     spins: { type: Number },
-    registrationDate: { type: Date, default: Date.now }, // Дата и время регистрации
-    spentSpins: { type: Number, default: 0 }, // Количество потраченных спинов
+    registrationDate: { 
+      type: String, 
+      default: () => formatDate(new Date()) // Формат: DD:MM:YYYY_HH:mm:ss
+    },
+    spentSpins: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
