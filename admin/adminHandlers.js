@@ -79,6 +79,51 @@ const setupAdminHandlers = (bot) => {
       bot.sendMessage(chatId, "Произошла ошибка при выполнении рассылки.");
     }
   });
+
+  bot.onText(/\/plus (\d+) (\d+)/, async (msg, match) => {
+    const chatId = msg.chat.id;
+
+    // Проверка на администратора
+    if (chatId !== ADMIN_ID) {
+      return bot.sendMessage(chatId, "У вас нет доступа к этой команде.");
+    }
+
+    try {
+      const userId = parseInt(match[1], 10); // ID пользователя
+      const spinsToAdd = parseInt(match[2], 10); // Количество спинов для добавления
+
+      if (isNaN(userId) || isNaN(spinsToAdd) || spinsToAdd <= 0) {
+        return bot.sendMessage(
+          chatId,
+          "❌ Укажите корректный ID пользователя и положительное количество спинов."
+        );
+      }
+
+      // Поиск пользователя в базе данных
+      const user = await User.findOne({ telegramId: userId });
+      if (!user) {
+        return bot.sendMessage(
+          chatId,
+          `❌ Пользователь с ID ${userId} не найден.`
+        );
+      }
+
+      // Добавление спинов
+      user.spins += spinsToAdd;
+      await user.save();
+
+      return bot.sendMessage(
+        chatId,
+        `✅ Пользователю с ID ${userId} добавлено ${spinsToAdd} спинов. Текущее количество спинов: ${user.spins}.`
+      );
+    } catch (error) {
+      console.error("Ошибка при выполнении команды /plus:", error);
+      return bot.sendMessage(
+        chatId,
+        "❌ Произошла ошибка при выполнении команды. Попробуйте снова."
+      );
+    }
+  });
 };
 
 module.exports = { setupAdminHandlers };

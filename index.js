@@ -9,6 +9,7 @@ const path = require("path");
 const {
   handleWebAppData,
   handleUpdateSpins,
+  handleGift
 } = require("./routes/appPostRoutes");
 const { setupAdminHandlers } = require("./admin/adminHandlers");
 
@@ -55,6 +56,7 @@ app.use(express.json());
 
 app.post("/webapp-data", handleWebAppData);
 app.post("/update-spins", handleUpdateSpins);
+app.post("/plusgift", handleGift);
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
 setupAdminHandlers(bot);
@@ -246,7 +248,8 @@ async function sendMainFunctionalityMessage(chatId, user, messageId = null) {
 
 📊 <b>Статистика:</b>
 • Рефералов: <b>${referralsCount}</b>
-• Вращений: <b>${user.spins}</b>
+• Вращений осталось: <b>${user.spins}</b>
+• Вращений откручено: <b>${user.spentSpins}</b>
 
 Удачи и приятных покупок! 🍀
 `;

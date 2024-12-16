@@ -44,6 +44,8 @@ const handleWebAppData = async (req, res) => {
       botUsername: process.env.BOT_USERNAME,
       referralsCount,
       spins: user.spins,
+      registrationDate: user.registrationDate,
+      spentSpins: user.spentSpins
     });
   } catch (error) {
     console.error("Ошибка /webapp-data:", error);
@@ -89,6 +91,9 @@ const handleUpdateSpins = async (req, res) => {
     if (operation === "plus") {
       user.spins += 1;
     } else {
+      if (user.spins > 0) {
+        user.spentSpins += 1; // Увеличиваем количество потраченных спинов
+      }
       user.spins = Math.max(user.spins - 1, 0);
     }
 
@@ -97,6 +102,7 @@ const handleUpdateSpins = async (req, res) => {
     return res.json({
       success: true,
       spins: user.spins,
+      spentSpins: user.spentSpins, // Возвращаем обновленное значение spentSpins
       message: `Spins успешно ${
         operation === "plus" ? "увеличены" : "уменьшены"
       }.`,
@@ -109,7 +115,50 @@ const handleUpdateSpins = async (req, res) => {
   }
 };
 
+const handleGift = async (req, res) => {
+  try {
+    const { initData } = req.body;
+
+    if (!initData) {
+      return res
+        .status(400)
+        .json({ success: false, message: "initData не передан." });
+    }
+
+    const userObj = parseInitData(initData);
+    if (!userObj) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Невалидный initData." });
+    }
+
+    const telegramId = userObj.id;
+    const user = await User.findOne({ telegramId });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Пользователь не найден." });
+    }
+
+    // Обновление поля registrationDate
+    user.registrationDate = new Date();
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: "Дата регистрации обновлена успешно.",
+      registrationDate: user.registrationDate,
+    });
+  } catch (error) {
+    console.error("Ошибка /plusgift:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Внутренняя ошибка сервера." });
+  }
+};
+
 module.exports = {
   handleWebAppData,
   handleUpdateSpins,
+  handleGift
 };

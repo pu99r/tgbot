@@ -1,4 +1,3 @@
-// models/User.js
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema(
@@ -11,7 +10,9 @@ const UserSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
-    spins: { type: Number, default: 3 },
+    spins: { type: Number },
+    registrationDate: { type: Date, default: Date.now }, // Дата и время регистрации
+    spentSpins: { type: Number, default: 0 }, // Количество потраченных спинов
   },
   { timestamps: true }
 );
