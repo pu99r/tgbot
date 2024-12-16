@@ -2,7 +2,11 @@ const User = require("../models/User");
 
 const formatDate = (date) => {
   const pad = (n) => (n < 10 ? `0${n}` : n);
-  return `${pad(date.getDate())}:${pad(date.getMonth() + 1)}:${date.getFullYear()}_${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  return `${pad(date.getDate())}:${pad(
+    date.getMonth() + 1
+  )}:${date.getFullYear()}_${pad(date.getHours())}:${pad(
+    date.getMinutes()
+  )}:${pad(date.getSeconds())}`;
 };
 const parseInitData = (initData) => {
   try {
@@ -49,7 +53,7 @@ const handleWebAppData = async (req, res) => {
       referralsCount,
       spins: user.spins,
       registrationDate: user.registrationDate,
-      spentSpins: user.spentSpins
+      spentSpins: user.spentSpins,
     });
   } catch (error) {
     console.error("Ошибка /webapp-data:", error);
@@ -145,13 +149,16 @@ const handleGift = async (req, res) => {
     }
 
     // Обновление поля registrationDate
-    user.registrationDate = formatDate(new Date())
+    user.registrationDate = formatDate(new Date());
+    user.spins = (user.spins || 0) + 1; // Если `spins` изначально undefined, устанавливаем 0 и добавляем 1.
+
     await user.save();
 
     return res.json({
       success: true,
-      message: "Дата регистрации обновлена успешно.",
+      message: "Дата регистрации и количество вращений обновлены успешно.",
       registrationDate: user.registrationDate,
+      spins: user.spins,
     });
   } catch (error) {
     console.error("Ошибка /plusgift:", error);
@@ -164,5 +171,5 @@ const handleGift = async (req, res) => {
 module.exports = {
   handleWebAppData,
   handleUpdateSpins,
-  handleGift
+  handleGift,
 };
