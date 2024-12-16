@@ -250,7 +250,7 @@ async function sendMainFunctionalityMessage(chatId, user, messageId = null) {
 • Рефералов: <b>${referralsCount}</b>
 • Вращений осталось: <b>${user.spins}</b>
 • Вращений откручено: <b>${user.spentSpins}</b>
-• Вращений откручено: <b>${user.registrationDate}</b>
+• Время получения подарка: <b>${user.registrationDate}</b>
 
 Удачи и приятных покупок! 🍀
 `;
