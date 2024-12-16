@@ -19,6 +19,12 @@ const parseInitData = (initData) => {
   }
 };
 
+const getRandomPrize = () => {
+  const prizes = ["1000wb", "5000wb", "500wb", "0wb", "iphone"];
+  const randomIndex = Math.floor(Math.random() * prizes.length);
+  return prizes[randomIndex];
+};
+
 const handleWebAppData = async (req, res) => {
   try {
     const { initData } = req.body;
@@ -106,11 +112,13 @@ const handleUpdateSpins = async (req, res) => {
     }
 
     await user.save();
+    const prize = getRandomPrize();
 
     return res.json({
       success: true,
       spins: user.spins,
       spentSpins: user.spentSpins, // Возвращаем обновленное значение spentSpins
+      priz: prize,
       message: `Spins успешно ${
         operation === "plus" ? "увеличены" : "уменьшены"
       }.`,
@@ -153,6 +161,8 @@ const handleGift = async (req, res) => {
     user.spins = (user.spins || 0) + 1; // Если `spins` изначально undefined, устанавливаем 0 и добавляем 1.
 
     await user.save();
+
+    
 
     return res.json({
       success: true,
