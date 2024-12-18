@@ -317,9 +317,6 @@ const handleTask = async (req, res) => {
       );
       return isPlatformCompatible && isNotCompleted;
     });
-
-    res.status(200).json({ success: true, projects: filteredProjects });
-
     res.status(200).json({ success: true, projects: filteredProjects });
   } catch (error) {
     console.error("Ошибка /tasks:", error);
