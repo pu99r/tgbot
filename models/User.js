@@ -22,6 +22,8 @@ const UserSchema = new mongoose.Schema(
       default: () => formatDate(new Date()) // Формат: DD:MM:YYYY_HH:mm:ss
     },
     spentSpins: { type: Number, default: 0 },
+    complete: { type: [String], default: [] },
+
   },
   { timestamps: true }
 );

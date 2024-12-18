@@ -28,6 +28,7 @@ const requiredEnv = [
   "MAINCHANNEL",
   "OTZOVCHANNEL",
 ];
+
 const missingEnv = requiredEnv.filter((env) => !process.env[env]);
 
 if (missingEnv.length > 0) {
@@ -48,12 +49,10 @@ mongoose
 app.use(cors());
 app.use(express.json());
 
-
 app.post("/webapp-data", handleWebAppData);
 app.post("/update-spins", handleUpdateSpins);
 app.post("/plusgift", handleGift);
 app.post("/tasks", handleTask);
-
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
 setupAdminHandlers(bot);
@@ -248,6 +247,7 @@ async function sendMainFunctionalityMessage(chatId, user, messageId = null) {
 • Вращений осталось: <b>${user.spins}</b>
 • Вращений откручено: <b>${user.spentSpins}</b>
 • Время получения подарка: <b>${user.registrationDate}</b>
+• Таски: <b>${user.complete}</b>
 
 Удачи и приятных покупок! 🍀
 `;

@@ -83,14 +83,27 @@ const projects = [
 ];
 
 const getRandomPrize = () => {
-  const round = ["iphone", "0", "10.000", "30.000", "0", "500", "40.000", "0", "500", "10.000", "0", "500"];
+  const round = [
+    "iphone",
+    "0",
+    "10.000",
+    "30.000",
+    "0",
+    "500",
+    "40.000",
+    "0",
+    "500",
+    "10.000",
+    "0",
+    "500",
+  ];
   const prizes = ["iphone", "40.000", "30.000", "10.000", "500", "0"];
   const priz = prizes[Math.floor(Math.random() * prizes.length)];
   const indices = round
     .map((value, index) => (value === priz ? index : -1))
-    .filter(index => index !== -1);
+    .filter((index) => index !== -1);
   const indexof = indices[Math.floor(Math.random() * indices.length)];
-  return {priz: priz, degree: (indexof*30)+15}
+  return { value: priz, degree: indexof * 30 + 15 };
 };
 
 const parseInitData = (initData) => {
@@ -206,7 +219,7 @@ const handleUpdateSpins = async (req, res) => {
       success: true,
       spins: user.spins,
       spentSpins: user.spentSpins, // Возвращаем обновленное значение spentSpins
-      priz: prize,
+      prize: prize,
       message: `Spins успешно ${
         operation === "plus" ? "увеличены" : "уменьшены"
       }.`,
@@ -250,8 +263,6 @@ const handleGift = async (req, res) => {
 
     await user.save();
 
-    
-
     return res.json({
       success: true,
       message: "Дата регистрации и количество вращений обновлены успешно.",
@@ -290,28 +301,37 @@ const handleTask = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Пользователь не найден." });
     }
-    
+
     if (!platform) {
       return res
         .status(400)
         .json({ success: false, message: "Не указана платформа." });
     }
 
-    const filteredProjects = projects.filter(project =>
-      project.platform === "all" || project.platform === platform
-    );
+    const userComplete = user.complete || [];
+    const filteredProjects = projects.filter((project) => {
+      const isPlatformCompatible =
+        project.platform === "all" || project.platform === platform;
+      const isNotCompleted = !userComplete.some((completeText) =>
+        completeText.includes(project.shortName)
+      );
+      return isPlatformCompatible && isNotCompleted;
+    });
+
+    res.status(200).json({ success: true, projects: filteredProjects });
 
     res.status(200).json({ success: true, projects: filteredProjects });
   } catch (error) {
     console.error("Ошибка /tasks:", error);
-    res.status(500).json({ success: false, message: "Внутренняя ошибка сервера." });
+    res
+      .status(500)
+      .json({ success: false, message: "Внутренняя ошибка сервера." });
   }
 };
-
 
 module.exports = {
   handleWebAppData,
   handleUpdateSpins,
   handleGift,
-  handleTask
+  handleTask,
 };
