@@ -1,5 +1,5 @@
 const User = require("../models/User");
-
+const tasks = require("./tasks.js")
 
 const getRandomPrize = () => {
   const round = ["iphone", "0", "10.000", "30.000", "0", "500", "40.000", "0", "500", "10.000", "0", "500"];
@@ -185,10 +185,27 @@ const handleGift = async (req, res) => {
   }
 };
 
+const handleTask = async (req, res) => {
+  try {
+    const { platform } = req.body; 
+    const filteredProjects = projects.filter(project =>
+      project.platform === "all" || project.platform === platform
+    );
+
+    res.status(200).json({ success: true, projects: filteredProjects });
+  } catch (error) {
+    console.error("Ошибка /tasks:", error);
+    res.status(500).json({ success: false, message: "Внутренняя ошибка сервера." });
+  }
+};
+
+app.post("/tasks", handleTask);
+
+
+
 module.exports = {
   handleWebAppData,
   handleUpdateSpins,
   handleGift,
+  handleTask
 };
-
-console.log(getRandomPrize())

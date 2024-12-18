@@ -9,7 +9,8 @@ const path = require("path");
 const {
   handleWebAppData,
   handleUpdateSpins,
-  handleGift
+  handleGift,
+  handleTask
 } = require("./routes/appPostRoutes");
 const { setupAdminHandlers } = require("./admin/adminHandlers");
 
@@ -47,16 +48,12 @@ mongoose
 app.use(cors());
 app.use(express.json());
 
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 минут
-//   max: 100, // макс. 100 запросов с одного IP
-//   message: "Слишком много запросов, попробуйте позже.",
-// });
-// app.use(limiter);
 
 app.post("/webapp-data", handleWebAppData);
 app.post("/update-spins", handleUpdateSpins);
 app.post("/plusgift", handleGift);
+app.post("/tasks", handleTask);
+
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
 setupAdminHandlers(bot);
