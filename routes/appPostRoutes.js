@@ -1,5 +1,5 @@
 const User = require("../models/User");
-const tasks = require("./tasks.js")
+const projects = require("./tasks.js")
 
 const getRandomPrize = () => {
   const round = ["iphone", "0", "10.000", "30.000", "0", "500", "40.000", "0", "500", "10.000", "0", "500"];
