@@ -199,9 +199,6 @@ const handleTask = async (req, res) => {
   }
 };
 
-app.post("/tasks", handleTask);
-
-
 
 module.exports = {
   handleWebAppData,
