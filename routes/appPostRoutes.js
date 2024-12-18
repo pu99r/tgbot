@@ -1,13 +1,17 @@
 const User = require("../models/User");
 
-const formatDate = (date) => {
-  const pad = (n) => (n < 10 ? `0${n}` : n);
-  return `${pad(date.getDate())}:${pad(
-    date.getMonth() + 1
-  )}:${date.getFullYear()}_${pad(date.getHours())}:${pad(
-    date.getMinutes()
-  )}:${pad(date.getSeconds())}`;
+
+const getRandomPrize = () => {
+  const round = ["iphone", "0", "10.000", "30.000", "0", "500", "40.000", "0", "500", "10.000", "0", "500"];
+  const prizes = ["iphone", "40.000", "30.000", "10.000", "500", "0"];
+  const priz = prizes[Math.floor(Math.random() * prizes.length)];
+  const indices = round
+    .map((value, index) => (value === priz ? index : -1))
+    .filter(index => index !== -1);
+  const indexof = indices[Math.floor(Math.random() * indices.length)];
+  return {priz: priz, degree: (indexof*30)+15}
 };
+
 const parseInitData = (initData) => {
   try {
     const params = new URLSearchParams(initData);
@@ -19,10 +23,13 @@ const parseInitData = (initData) => {
   }
 };
 
-const getRandomPrize = () => {
-  const prizes = ["1000wb", "5000wb", "500wb", "0wb", "iphone"];
-  const randomIndex = Math.floor(Math.random() * prizes.length);
-  return prizes[randomIndex];
+const formatDate = (date) => {
+  const pad = (n) => (n < 10 ? `0${n}` : n);
+  return `${pad(date.getDate())}:${pad(
+    date.getMonth() + 1
+  )}:${date.getFullYear()}_${pad(date.getHours())}:${pad(
+    date.getMinutes()
+  )}:${pad(date.getSeconds())}`;
 };
 
 const handleWebAppData = async (req, res) => {
@@ -183,3 +190,5 @@ module.exports = {
   handleUpdateSpins,
   handleGift,
 };
+
+console.log(getRandomPrize())
