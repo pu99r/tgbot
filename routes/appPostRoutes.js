@@ -268,7 +268,35 @@ const handleGift = async (req, res) => {
 
 const handleTask = async (req, res) => {
   try {
-    const { platform } = req.body; 
+    const { initData, platform } = req.body;
+
+    if (!initData) {
+      return res
+        .status(400)
+        .json({ success: false, message: "initData не передан." });
+    }
+
+    const userObj = parseInitData(initData);
+    if (!userObj) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Невалидный initData." });
+    }
+
+    const telegramId = userObj.id;
+    const user = await User.findOne({ telegramId });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Пользователь не найден." });
+    }
+    
+    if (!platform) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Не указана платформа." });
+    }
+
     const filteredProjects = projects.filter(project =>
       project.platform === "all" || project.platform === platform
     );
