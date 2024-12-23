@@ -187,17 +187,26 @@ const handleUpdateSpins = async (req, res) => {
 
     const telegramId = userObj.id;
     const user = await User.findOne({ telegramId });
+    
     if (!user) {
       return res
         .status(404)
         .json({ success: false, message: "Пользователь не найден." });
     }
 
+    let spinslef = user.spins
+    if ( spinslef <= 0 ) {
+      return res.json({
+        success: false,
+        message: `Нет спинов`,
+      });
+    }
+
     if (operation === "plus") {
       user.spins += 1;
     } else {
       if (user.spins > 0) {
-        user.spentSpins += 1; // Увеличиваем количество потраченных спинов
+        user.spentSpins += 1; 
       }
       user.spins = Math.max(user.spins - 1, 0);
     }
