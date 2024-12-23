@@ -5,7 +5,6 @@ const projects = [
     buttonText: "Скачать",
     description: "Скачай и получи +1 прокрут",
     link: "https://www.google.ru/?hl=ru",
-    platform: "all",
     shortName: "epic_battle_quest",
   },
   {
@@ -13,7 +12,6 @@ const projects = [
     buttonText: "Зарегистрироваться",
     description: "Зарегистрируйся и получи +1 прокрут",
     link: "https://www.google.ru/?hl=ru",
-    platform: "android",
     shortName: "mystic_puzzle_saga",
   },
   {
@@ -21,7 +19,6 @@ const projects = [
     buttonText: "Скачать",
     description: "Скачай и получи +1 прокрут",
     link: "https://www.google.ru/?hl=ru",
-    platform: "ios",
     shortName: "galaxy_racer_x",
   },
   {
@@ -29,7 +26,6 @@ const projects = [
     buttonText: "Зарегистрироваться",
     description: "Зарегистрируйся и получи +1 прокрут",
     link: "https://www.google.ru/?hl=ru",
-    platform: "all",
     shortName: "fantasy_kingdom",
   },
   {
@@ -37,7 +33,6 @@ const projects = [
     buttonText: "Скачать",
     description: "Скачай и получи +1 прокрут",
     link: "https://www.google.ru/?hl=ru",
-    platform: "android",
     shortName: "adventure_runner",
   },
   {
@@ -45,7 +40,6 @@ const projects = [
     buttonText: "Зарегистрироваться",
     description: "Зарегистрируйся и получи +1 прокрут",
     link: "https://www.google.ru/?hl=ru",
-    platform: "ios",
     shortName: "zombie_survival_3d",
   },
   {
@@ -53,7 +47,6 @@ const projects = [
     buttonText: "Скачать",
     description: "Скачай и получи +1 прокрут",
     link: "https://www.google.ru/?hl=ru",
-    platform: "all",
     shortName: "space_miner",
   },
   {
@@ -61,7 +54,6 @@ const projects = [
     buttonText: "Зарегистрироваться",
     description: "Зарегистрируйся и получи +1 прокрут",
     link: "https://www.google.ru/?hl=ru",
-    platform: "android",
     shortName: "treasure_hunt",
   },
   {
@@ -69,7 +61,6 @@ const projects = [
     buttonText: "Скачать",
     description: "Скачай и получи +1 прокрут",
     link: "https://www.google.ru/?hl=ru",
-    platform: "ios",
     shortName: "warriors_journey",
   },
   {
@@ -77,7 +68,6 @@ const projects = [
     buttonText: "Зарегистрироваться",
     description: "Зарегистрируйся и получи +1 прокрут",
     link: "https://www.google.ru/?hl=ru",
-    platform: "all",
     shortName: "magic_duel",
   },
 ];
@@ -279,7 +269,7 @@ const handleGift = async (req, res) => {
 
 const handleTask = async (req, res) => {
   try {
-    const { initData, platform } = req.body;
+    const { initData } = req.body;
 
     if (!initData) {
       return res
@@ -302,21 +292,13 @@ const handleTask = async (req, res) => {
         .json({ success: false, message: "Пользователь не найден." });
     }
 
-    if (!platform) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Не указана платформа." });
-    }
-
     const userComplete = user.complete || [];
     const filteredProjects = projects.filter((project) => {
-      const isPlatformCompatible =
-        project.platform === "all" || project.platform === platform;
-      const isNotCompleted = !userComplete.some((completeText) =>
+      return !userComplete.some((completeText) =>
         completeText.includes(project.shortName)
       );
-      return isPlatformCompatible && isNotCompleted;
     });
+
     res.status(200).json({ success: true, projects: filteredProjects });
   } catch (error) {
     console.error("Ошибка /tasks:", error);
