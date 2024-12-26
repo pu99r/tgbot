@@ -50,8 +50,7 @@ const handleStart = async (bot, msg, match) => {
       if (!response.ok) {
         throw new Error(`Ошибка сети: ${response.status}`);
       }
-      const data = await response.json();
-      logger.info(`Postback успешен для clickid: ${clickid}`);
+      logger.info(`Postback отправлен успешно для clickid: ${clickid}`);
     } catch (error) {
       logger.error("Произошла ошибка при выполнении postback:", error);
     }
