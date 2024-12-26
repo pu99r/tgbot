@@ -183,7 +183,6 @@ const handleWebAppData = async (req, res) => {
   }
 };
 
-
 const handleGift = async (req, res) => {
   try {
     const { initData } = req.body;

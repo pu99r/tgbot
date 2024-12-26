@@ -16,7 +16,6 @@ const setupAdminHandlers = (bot) => {
       const userCount = users.length;
 
       const message = `👥 <b>Пользователи бота: ${userCount}</b>`;
-
       await bot.sendMessage(chatId, message, { parse_mode: "HTML" });
     } catch (error) {
       console.error("Ошибка при выполнении команды /stats:", error);
@@ -34,44 +33,85 @@ const setupAdminHandlers = (bot) => {
     isWaitingForMessage = true;
     await bot.sendMessage(
       chatId,
-      "✉️ Введите сообщение для рассылки всем пользователям. Для отмены введите <b>-</b>.",
+      "✉️ Введите сообщение для рассылки всем пользователям. " +
+        "Для отмены введите <b>-</b>.",
       { parse_mode: "HTML" }
     );
   });
 
+  // Общий обработчик сообщений
   bot.on("message", async (msg) => {
     const chatId = msg.chat.id;
 
-    if (chatId !== ADMIN_ID || !isWaitingForMessage || msg.text.startsWith("/"))
-      return;
+    // Если сообщение от не-админа или мы не в режиме ожидания, выходим
+    if (chatId !== ADMIN_ID || !isWaitingForMessage) return;
 
-    const text = msg.text.trim();
+    // Если сообщение начинается с "/", значит это, скорее всего, другая команда — игнорируем
+    if (msg.text && msg.text.startsWith("/")) return;
 
-    if (text === "-") {
+    // Проверка на отмену
+    if (msg.text && msg.text.trim() === "-") {
       isWaitingForMessage = false;
       return bot.sendMessage(chatId, "❌ Рассылка отменена.");
     }
 
+    // Пытаемся разослать сообщение всем
     try {
+      // Список пользователей
       const users = await User.find({}, "telegramId");
       let successCount = 0;
 
-      for (const user of users) {
-        try {
-          await bot.sendMessage(user.telegramId, text, { parse_mode: "HTML" });
-          successCount++;
-        } catch (error) {
-          console.error(
-            `Ошибка при отправке пользователю ${user.telegramId}:`,
-            error
-          );
+      // Если в сообщении есть фото
+      if (msg.photo && msg.photo.length > 0) {
+        const largestPhoto = msg.photo[msg.photo.length - 1].file_id;
+        const caption = msg.caption || ""; // подпись к фото (может быть пустой)
+
+        for (const user of users) {
+          try {
+            await bot.sendPhoto(user.telegramId, largestPhoto, {
+              caption: caption,
+              parse_mode: "HTML",
+            });
+            successCount++;
+          } catch (error) {
+            console.error(
+              `Ошибка при отправке фото пользователю ${user.telegramId}:`,
+              error
+            );
+          }
         }
       }
+      // Иначе, если есть текст
+      else if (msg.text) {
+        const text = msg.text;
+        for (const user of users) {
+          try {
+            await bot.sendMessage(user.telegramId, text, {
+              parse_mode: "HTML",
+            });
+            successCount++;
+          } catch (error) {
+            console.error(
+              `Ошибка при отправке сообщения пользователю ${user.telegramId}:`,
+              error
+            );
+          }
+        }
+      } else {
+        // Если пришел другой тип сообщения (например, видео, документ) — можно дописать логику
+        await bot.sendMessage(
+          chatId,
+          "Сейчас поддерживается рассылка только текста и фото. " +
+            "Добавьте обработку, если хотите другие типы вложений."
+        );
+        return;
+      }
 
+      // Завершаем рассылку
       isWaitingForMessage = false;
       await bot.sendMessage(
         chatId,
-        `✅ Сообщение отправлено <b>${successCount}</b> пользователям.`,
+        `✅ Сообщение(я) отправлены <b>${successCount}</b> пользователям.`,
         { parse_mode: "HTML" }
       );
     } catch (error) {
@@ -80,17 +120,17 @@ const setupAdminHandlers = (bot) => {
     }
   });
 
+  // Команда /plus для добавления спинов (пример из вашего кода)
   bot.onText(/\/plus (\d+) (\d+)/, async (msg, match) => {
     const chatId = msg.chat.id;
 
-    // Проверка на администратора
     if (chatId !== ADMIN_ID) {
       return bot.sendMessage(chatId, "У вас нет доступа к этой команде.");
     }
 
     try {
       const userId = parseInt(match[1], 10); // ID пользователя
-      const spinsToAdd = parseInt(match[2], 10); // Количество спинов для добавления
+      const spinsToAdd = parseInt(match[2], 10); // Количество спинов
 
       if (isNaN(userId) || isNaN(spinsToAdd) || spinsToAdd <= 0) {
         return bot.sendMessage(
@@ -99,7 +139,6 @@ const setupAdminHandlers = (bot) => {
         );
       }
 
-      // Поиск пользователя в базе данных
       const user = await User.findOne({ telegramId: userId });
       if (!user) {
         return bot.sendMessage(
@@ -108,13 +147,13 @@ const setupAdminHandlers = (bot) => {
         );
       }
 
-      // Добавление спинов
       user.spins += spinsToAdd;
       await user.save();
 
       return bot.sendMessage(
         chatId,
-        `✅ Пользователю с ID ${userId} добавлено ${spinsToAdd} спинов. Текущее количество спинов: ${user.spins}.`
+        `✅ Пользователю с ID ${userId} добавлено ${spinsToAdd} спинов. ` +
+          `Текущее количество спинов: ${user.spins}.`
       );
     } catch (error) {
       console.error("Ошибка при выполнении команды /plus:", error);
