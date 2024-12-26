@@ -4,14 +4,14 @@ const mongoose = require("mongoose");
 const TelegramBot = require("node-telegram-bot-api");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
+const updateCompleteRouter = require("./routes/updateComplete");
 const path = require("path");
 
 const {
   handleWebAppData,
   handleUpdateSpins,
   handleGift,
-  handleTask,
-  updateComplete
+  handleTask
 } = require("./routes/appPostRoutes");
 const { setupAdminHandlers } = require("./admin/adminHandlers");
 
@@ -54,7 +54,7 @@ app.post("/webapp-data", handleWebAppData);
 app.post("/update-spins", handleUpdateSpins);
 app.post("/plusgift", handleGift);
 app.post("/tasks", handleTask);
-app.use("/update-complete", updateComplete);
+app.use("/update-complete", updateCompleteRouter);
 
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });

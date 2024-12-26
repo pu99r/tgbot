@@ -247,29 +247,9 @@ const handleTask = async (req, res) => {
   }
 };
 
-const updateComplete = async (telegramId, shortName) => {
-  if (!telegramId || !shortName) {
-    throw new Error("Необходимо передать telegramId и shortName.");
-  }
-  console.log(telegramId)
-  console.log(shortName)
-  const user = await User.findOne({ telegramId });
-
-  if (!user) {
-    throw new Error("Пользователь не найден.");
-  }
-
-  if (!user.complete.includes(shortName)) {
-    user.complete.push(shortName);
-    await user.save();
-  }
-  return "успех";
-};
-
 module.exports = {
   handleWebAppData,
   handleUpdateSpins,
   handleGift,
-  handleTask,
-  updateComplete
+  handleTask
 };
