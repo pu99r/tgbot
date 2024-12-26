@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "pm2 start server.js --name mybot -i 1",
-    "stop": "pm2 stop mybot && pm2 delete mybot"
+    "stop": "pm2 stop mybot && pm2 delete mybot",
+    "clean-logs": "pm2 flush && echo '' > ./combined.log"
   },
   "keywords": [],
   "author": "",
