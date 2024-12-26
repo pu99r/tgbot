@@ -1,8 +1,6 @@
-const fs = require("fs").promises;
 const User = require("../models/User");
 const projects = require('./tasks');
-const path = require("path");
-
+const getRandomPrize = require("../Prize");
 
 const parseInitData = (initData) => {
   try {
@@ -24,49 +22,6 @@ const formatDate = (date) => {
   )}:${pad(date.getSeconds())}`;
 };
 
-const getRandomPrize = async (telegramId) => {
-  const round = [
-    "iphone",
-    "0",
-    "10.000",
-    "30.000",
-    "0",
-    "500",
-    "40.000",
-    "0",
-    "500",
-    "10.000",
-    "0",
-    "500",
-  ];
-  // const prizes = ["iphone", "40.000", "30.000", "10.000", "500", "0"];
-  const prizes = ["500"];
-  const priz = prizes[Math.floor(Math.random() * prizes.length)];
-  const indices = round
-    .map((value, index) => (value === priz ? index : -1))
-    .filter((index) => index !== -1);
-  const indexof = indices[Math.floor(Math.random() * indices.length)];
-
-  if (priz === "500") {
-    try {
-      const filePath = path.join(__dirname, "codes.txt");
-      let data = await fs.readFile(filePath, "utf8");
-      let lines = data.split("\n").filter((line) => line.trim() !== "");
-      if (lines.length > 0) {
-        const codeFromFile = lines.shift();
-        await fs.writeFile(filePath, lines.join("\n"));
-        const user = await User.findOne({ telegramId });
-        if (user) {
-          user.codes.push(codeFromFile.trim());
-          await user.save();
-        }
-      }
-    } catch (err) {
-      console.error("Ошибка при обработке файла с кодами:", err);
-    }
-  }
-  return { value: priz, degree: indexof * 30 + 15 };
-};
 const handleUpdateSpins = async (req, res) => {
   try {
     const { initData, operation } = req.body;
@@ -174,6 +129,7 @@ const handleWebAppData = async (req, res) => {
       spins: user.spins,
       registrationDate: user.registrationDate,
       spentSpins: user.spentSpins,
+      codes: user.codes
     });
   } catch (error) {
     console.error("Ошибка /webapp-data:", error);
