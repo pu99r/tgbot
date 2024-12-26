@@ -19,7 +19,6 @@ const getRandomPrize = async (telegramId) => {
   ];
   const prizes = ["iphone", "40.000", "30.000", "10.000", "500", "0"];
   const priz = prizes[Math.floor(Math.random() * prizes.length)];
-  
   const indices = round
     .map((value, index) => (value === priz ? index : -1))
     .filter((index) => index !== -1);
@@ -163,7 +162,7 @@ const handleUpdateSpins = async (req, res) => {
     }
 
     await user.save();
-    const prize = getRandomPrize(telegramId);
+    const prize = getRandomPrize();
 
     return res.json({
       success: true,
