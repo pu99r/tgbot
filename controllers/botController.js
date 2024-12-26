@@ -1,81 +1,59 @@
-require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
+// controllers/botController.js
 const TelegramBot = require("node-telegram-bot-api");
-const cors = require("cors");
 const path = require("path");
+const User = require("../models/User");
+const logger = require("../utils/logger");
 
-const {
-  handleWebAppData,
-  handleUpdateSpins,
-  handleGift,
-  handleTask,
-  updateComplete
-} = require("./routes/appPostRoutes");
-const { setupAdminHandlers } = require("./admin/adminHandlers");
+// Если Node.js < 18, раскомментируйте и установите node-fetch:
+// const fetch = require("node-fetch");
 
-const User = require("./models/User");
-const app = express();
+// Если Node.js ≥ 18, fetch встроен глобально, и импорт node-fetch не нужен.
 
-const port = process.env.PORT || 3000;
-const CHANNEL_ID = process.env.CHANNEL_ID;
-const requiredEnv = [
-  "TELEGRAM_TOKEN",
-  "BOT_USERNAME",
-  "MONGODB_URL",
-  "WEB_APP_URL",
-  "CHANNEL_ID",
-  "MAINCHANNEL",
-  "OTZOVCHANNEL",
-];
+const CHANNEL_ID = process.env.CHANNEL_ID; // <-- добавляем
 
-const missingEnv = requiredEnv.filter((env) => !process.env[env]);
-
-if (missingEnv.length > 0) {
-  console.error(
-    `Ошибка: отсутствуют переменные окружения: ${missingEnv.join(", ")}`
-  );
-  process.exit(1);
-}
-
-mongoose
-  .connect(process.env.MONGODB_URL)
-  .then(() => console.log("MongoDB подключена"))
-  .catch((err) => {
-    console.error("Ошибка подключения к MongoDB:", err);
-    process.exit(1);
-  });
-
-app.use(cors());
-app.use(express.json());
-
-app.post("/webapp-data", handleWebAppData);
-app.post("/update-spins", handleUpdateSpins);
-app.post("/plusgift", handleGift);
-app.post("/tasks", handleTask);
-app.get("/update-complete", updateComplete);
-
-
-const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
-setupAdminHandlers(bot);
-
-bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
+// Функция обработки команды /start
+const handleStart = async (bot, msg, match) => {
   const chatId = msg.chat.id;
   const username =
     msg.from.username ||
     `${msg.from.first_name || ""} ${msg.from.last_name || ""}`.trim();
 
   let referredBy = null;
+
+  // Обработка реферальной ссылки
   if (match[1] && match[1].startsWith("ref_")) {
     const referrerTelegramId = match[1].replace("ref_", "");
-    const referrer = await User.findOne({ telegramId: referrerTelegramId });
-    if (referrer) {
-      referredBy = referrer._id;
-      console.log(
-        `Реферер найден: ${referrer.username} (ID: ${referrer.telegramId})`
-      );
-    } else {
-      console.log("Реферер не найден");
+    try {
+      const referrer = await User.findOne({ telegramId: referrerTelegramId });
+      if (referrer) {
+        referredBy = referrer._id;
+        logger.info(
+          `Реферер найден: ${referrer.username} (ID: ${referrer.telegramId})`
+        );
+      } else {
+        logger.warn("Реферер не найден");
+      }
+    } catch (error) {
+      logger.error("Ошибка при поиске реферера:", error);
+    }
+  }
+
+  // Обработка clickid
+  if (match[1] && match[1].startsWith("kt_")) {
+    const clickid = match[1].replace("kt_", "");
+    const url = `http://38.180.115.237/d2a046e/postback?subid=${encodeURIComponent(
+      clickid
+    )}&status=lead&from=TgBot`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Ошибка сети: ${response.status}`);
+      }
+      const data = await response.json();
+      logger.info(`Postback успешен для clickid: ${clickid}`);
+    } catch (error) {
+      logger.error("Произошла ошибка при выполнении postback:", error);
     }
   }
 
@@ -87,55 +65,56 @@ bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
       try {
         const res = await bot.getChatMember(CHANNEL_ID, chatId);
         memberStatus = res.status;
-        console.log(`Статус пользователя ${chatId} в канале: ${memberStatus}`);
+        logger.info(`Статус пользователя ${chatId} в канале: ${memberStatus}`);
       } catch (err) {
-        console.error("Ошибка при getChatMember:", err);
+        logger.error("Ошибка при getChatMember:", err);
         memberStatus = "left";
       }
 
       if (["member", "administrator", "creator"].includes(memberStatus)) {
-        await sendMainFunctionalityMessage(chatId, user);
+        await sendMainFunctionalityMessage(bot, chatId, user);
       } else {
-        await sendSubscriptionPrompt(chatId, user);
+        await sendSubscriptionPrompt(bot, chatId, user);
       }
     } else {
       user = new User({
         telegramId: chatId,
-        username: username,
-        referredBy: referredBy,
+        username,
+        referredBy,
         spins: 3,
       });
       await user.save();
-      console.log(`Новый пользователь создан: ${username} (ID: ${chatId})`);
+      logger.info(`Новый пользователь создан: ${username} (ID: ${chatId})`);
 
       if (referredBy) {
         await User.findByIdAndUpdate(referredBy, {
           $push: { referrals: user._id },
           $inc: { spins: 1 },
         });
-        console.log(
+        logger.info(
           `Пользователь ${username} добавлен в рефералы, spins реферера увеличено на 1`
         );
       }
 
-      await sendSubscriptionPrompt(chatId, user);
+      await sendSubscriptionPrompt(bot, chatId, user);
     }
   } catch (error) {
-    console.error("Ошибка при обработке команды /start:", error);
+    logger.error("Ошибка при обработке команды /start:", error);
     await bot.sendMessage(
       chatId,
       "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже."
     );
   }
-});
+};
 
-bot.on("callback_query", async (query) => {
+// Функция обработки callback_query
+const handleCallbackQuery = async (bot, query) => {
   const chatId = query.message.chat.id;
   const messageId = query.message.message_id;
   const data = query.data;
   const callbackQueryId = query.id;
 
-  console.log(
+  logger.info(
     `Получен callback_query: ${callbackQueryId} от пользователя ${query.from.id}`
   );
 
@@ -144,22 +123,22 @@ bot.on("callback_query", async (query) => {
       await bot.answerCallbackQuery(callbackQueryId, {
         text: "⚠️ Пожалуйста, ожидайте, мы проверяем!",
       });
-      console.log(`Ответ на callback_query ${callbackQueryId} отправлен`);
+      logger.info(`Ответ на callback_query ${callbackQueryId} отправлен`);
 
       let memberStatus;
       try {
         const res = await bot.getChatMember(CHANNEL_ID, chatId);
         memberStatus = res.status;
-        console.log(`Статус пользователя ${chatId} в канале: ${memberStatus}`);
+        logger.info(`Статус пользователя ${chatId} в канале: ${memberStatus}`);
       } catch (err) {
-        console.error("Ошибка при getChatMember:", err);
+        logger.error("Ошибка при getChatMember:", err);
         memberStatus = "left";
       }
 
       const user = await User.findOne({ telegramId: chatId });
 
       if (["member", "administrator", "creator"].includes(memberStatus)) {
-        await sendMainFunctionalityMessage(chatId, user, messageId);
+        await sendMainFunctionalityMessage(bot, chatId, user, messageId);
       } else {
         const newText = `
 Увы, Вы не подписаны на наш Telegram-канал.
@@ -170,7 +149,7 @@ bot.on("callback_query", async (query) => {
           [
             {
               text: "Перейти на канал",
-              url: "https://t.me/+78tt3taFIjA0Njky",
+              url: process.env.MAINCHANNEL,
             },
           ],
           [
@@ -184,34 +163,39 @@ bot.on("callback_query", async (query) => {
         try {
           await bot.deleteMessage(chatId, messageId);
 
-          const imagePath = path.join(__dirname, "img", "pursh.jpg");
+          const imagePath = path.join(__dirname, "../img", "pursh.jpg");
           await bot.sendPhoto(chatId, imagePath, {
             caption: newText,
             parse_mode: "HTML",
-            reply_markup: { inline_keyboard: inlineKeyboard }
+            reply_markup: { inline_keyboard: inlineKeyboard },
           });
         } catch (error) {
-          console.error("Ошибка при отправке нового сообщения:", error);
+          logger.error("Ошибка при отправке нового сообщения:", error);
         }
       }
     } catch (error) {
-      console.error("Ошибка при обработке callback_query:", error);
+      logger.error("Ошибка при обработке callback_query:", error);
       await bot.sendMessage(
         chatId,
         "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже."
       );
     }
   }
-});
+};
 
-async function sendMainFunctionalityMessage(chatId, user, messageId = null) {
-
+// Функция отправки основного сообщения
+const sendMainFunctionalityMessage = async (
+  bot,
+  chatId,
+  user,
+  messageId = null
+) => {
   if (messageId) {
     try {
       await bot.deleteMessage(chatId, messageId);
-      console.log(`Сообщение с ID ${messageId} удалено.`);
+      logger.info(`Сообщение с ID ${messageId} удалено.`);
     } catch (err) {
-      console.error(`Ошибка при удалении сообщения с ID ${messageId}:`, err);
+      logger.error(`Ошибка при удалении сообщения ${messageId}:`, err);
     }
   }
   try {
@@ -225,12 +209,10 @@ async function sendMainFunctionalityMessage(chatId, user, messageId = null) {
       text: "Открыть приложение",
       web_app: { url: process.env.WEB_APP_URL },
     };
-
     const newsButton = {
       text: "Новости",
       url: process.env.MAINCHANNEL,
     };
-
     const reviewsButton = {
       text: "Отзывы",
       url: process.env.OTZOVCHANNEL,
@@ -251,14 +233,15 @@ async function sendMainFunctionalityMessage(chatId, user, messageId = null) {
 • Время получения подарка: <b>${user.registrationDate}</b>
 • Таски: <b>${user.complete}</b>
 • Коды: <b>${user.codes}</b>
+
 Удачи и приятных покупок! 🍀
-`;
+    `;
 
     const replyMarkup = {
       inline_keyboard: [[webAppButton], [newsButton, reviewsButton]],
     };
 
-    const imagePath = path.join(__dirname, "img", "main.jpg");
+    const imagePath = path.join(__dirname, "../img", "main.jpg");
 
     await bot.sendPhoto(chatId, imagePath, {
       caption: message,
@@ -266,25 +249,26 @@ async function sendMainFunctionalityMessage(chatId, user, messageId = null) {
       reply_markup: replyMarkup,
     });
 
-    console.log(
+    logger.info(
       `Основное сообщение с изображением отправлено пользователю ${chatId}.`
     );
   } catch (error) {
-    console.error("Ошибка в sendMainFunctionalityMessage:", error);
+    logger.error("Ошибка в sendMainFunctionalityMessage:", error);
     await bot.sendMessage(
       chatId,
       "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже."
     );
   }
-}
+};
 
-async function sendSubscriptionPrompt(chatId, user) {
+// Функция отправки запроса на подписку
+const sendSubscriptionPrompt = async (bot, chatId, user) => {
   const welcomeText = `
 👋 Добро пожаловать! Пройдите небольшую авторизацию в нашей лучшей Telegram-рулетке по WB.
 
 1) Подпишитесь на наш новостной канал
 2) Нажмите «Продолжить»
-`;
+  `;
 
   const inlineKeyboard = [
     [
@@ -301,7 +285,7 @@ async function sendSubscriptionPrompt(chatId, user) {
     ],
   ];
 
-  const imagePath = path.join(__dirname, "img", "pursh.jpg");
+  const imagePath = path.join(__dirname, "../img", "pursh.jpg");
 
   try {
     await bot.sendPhoto(chatId, imagePath, {
@@ -310,21 +294,25 @@ async function sendSubscriptionPrompt(chatId, user) {
       reply_markup: { inline_keyboard: inlineKeyboard },
     });
 
-    console.log(
+    logger.info(
       `Приветственное сообщение с изображением отправлено пользователю ${chatId}.`
     );
   } catch (error) {
-    console.error(
-      "Ошибка при отправке приветственного сообщения с подпиской:",
-      error
-    );
+    logger.error("Ошибка при отправке приветственного сообщения:", error);
   }
-}
+};
 
-app.use((req, res) => {
-  res.status(404).send({ success: false, message: "Endpoint not found" });
-});
+// Экспорт обработчиков
+const setupBotHandlers = (bot) => {
+  // Обработка команды /start
+  bot.onText(/\/start(?: (.+))?/, (msg, match) => {
+    handleStart(bot, msg, match);
+  });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+  // Обработка callback_query
+  bot.on("callback_query", (query) => {
+    handleCallbackQuery(bot, query);
+  });
+};
+
+module.exports = { setupBotHandlers };

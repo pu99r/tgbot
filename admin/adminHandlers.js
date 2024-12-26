@@ -1,4 +1,5 @@
-const ADMIN_ID = 1370034279;
+// admin/adminHandlers.js
+const ADMIN_ID = 1370034279; // ваш админский ID
 const User = require("../models/User");
 
 let isWaitingForMessage = false;
@@ -14,7 +15,6 @@ const setupAdminHandlers = (bot) => {
     try {
       const users = await User.find({}, "telegramId username");
       const userCount = users.length;
-
       const message = `👥 <b>Пользователи бота: ${userCount}</b>`;
       await bot.sendMessage(chatId, message, { parse_mode: "HTML" });
     } catch (error) {
@@ -25,7 +25,6 @@ const setupAdminHandlers = (bot) => {
 
   bot.onText(/\/mes/, async (msg) => {
     const chatId = msg.chat.id;
-
     if (chatId !== ADMIN_ID) {
       return bot.sendMessage(chatId, "У вас нет доступа к этой команде.");
     }
@@ -33,8 +32,7 @@ const setupAdminHandlers = (bot) => {
     isWaitingForMessage = true;
     await bot.sendMessage(
       chatId,
-      "✉️ Введите сообщение для рассылки всем пользователям. " +
-        "Для отмены введите <b>-</b>.",
+      "✉️ Введите сообщение для рассылки всем пользователям. Для отмены введите <b>-</b>.",
       { parse_mode: "HTML" }
     );
   });
@@ -42,7 +40,6 @@ const setupAdminHandlers = (bot) => {
   // Общий обработчик сообщений
   bot.on("message", async (msg) => {
     const chatId = msg.chat.id;
-
     // Если сообщение от не-админа или мы не в режиме ожидания, выходим
     if (chatId !== ADMIN_ID || !isWaitingForMessage) return;
 
@@ -55,7 +52,6 @@ const setupAdminHandlers = (bot) => {
       return bot.sendMessage(chatId, "❌ Рассылка отменена.");
     }
 
-    // Пытаемся разослать сообщение всем
     try {
       // Список пользователей
       const users = await User.find({}, "telegramId");
@@ -64,7 +60,7 @@ const setupAdminHandlers = (bot) => {
       // Если в сообщении есть фото
       if (msg.photo && msg.photo.length > 0) {
         const largestPhoto = msg.photo[msg.photo.length - 1].file_id;
-        const caption = msg.caption || ""; // подпись к фото (может быть пустой)
+        const caption = msg.caption || ""; // подпись к фото
 
         for (const user of users) {
           try {
@@ -98,7 +94,7 @@ const setupAdminHandlers = (bot) => {
           }
         }
       } else {
-        // Если пришел другой тип сообщения (например, видео, документ) — можно дописать логику
+        // Если пришёл другой тип сообщения — можно дописать логику
         await bot.sendMessage(
           chatId,
           "Сейчас поддерживается рассылка только текста и фото. " +
@@ -120,7 +116,7 @@ const setupAdminHandlers = (bot) => {
     }
   });
 
-  // Команда /plus для добавления спинов (пример из вашего кода)
+  // Команда /plus для добавления спинов
   bot.onText(/\/plus (\d+) (\d+)/, async (msg, match) => {
     const chatId = msg.chat.id;
 
@@ -152,8 +148,7 @@ const setupAdminHandlers = (bot) => {
 
       return bot.sendMessage(
         chatId,
-        `✅ Пользователю с ID ${userId} добавлено ${spinsToAdd} спинов. ` +
-          `Текущее количество спинов: ${user.spins}.`
+        `✅ Пользователю с ID ${userId} добавлено ${spinsToAdd} спинов. Текущее количество: ${user.spins}.`
       );
     } catch (error) {
       console.error("Ошибка при выполнении команды /plus:", error);
