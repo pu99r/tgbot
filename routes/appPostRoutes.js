@@ -19,30 +19,29 @@ const getRandomPrize = async (telegramId) => {
   ];
   const prizes = ["iphone", "40.000", "30.000", "10.000", "500", "0"];
   const priz = prizes[Math.floor(Math.random() * prizes.length)];
-  console.log(priz)
   const indices = round
     .map((value, index) => (value === priz ? index : -1))
     .filter((index) => index !== -1);
   const indexof = indices[Math.floor(Math.random() * indices.length)];
 
-  // if (priz === "500") {
-  //   try {
-  //     const filePath = path.join(__dirname, "codes.txt");
-  //     let data = await fs.readFile(filePath, "utf8");
-  //     let lines = data.split("\n").filter((line) => line.trim() !== "");
-  //     if (lines.length > 0) {
-  //       const codeFromFile = lines.shift();
-  //       await fs.writeFile(filePath, lines.join("\n"));
-  //       const user = await User.findOne({ telegramId });
-  //       if (user) {
-  //         user.codes.push(codeFromFile.trim());
-  //         await user.save();
-  //       }
-  //     }
-  //   } catch (err) {
-  //     console.error("Ошибка при обработке файла с кодами:", err);
-  //   }
-  // }
+  if (priz === "500") {
+    try {
+      const filePath = path.join(__dirname, "codes.txt");
+      let data = await fs.readFile(filePath, "utf8");
+      let lines = data.split("\n").filter((line) => line.trim() !== "");
+      if (lines.length > 0) {
+        const codeFromFile = lines.shift();
+        await fs.writeFile(filePath, lines.join("\n"));
+        const user = await User.findOne({ telegramId });
+        if (user) {
+          user.codes.push(codeFromFile.trim());
+          await user.save();
+        }
+      }
+    } catch (err) {
+      console.error("Ошибка при обработке файла с кодами:", err);
+    }
+  }
   return { value: priz, degree: indexof * 30 + 15 };
 };
 
@@ -163,7 +162,8 @@ const handleUpdateSpins = async (req, res) => {
     }
 
     await user.save();
-    const prize = getRandomPrize();
+    const prize = getRandomPrize(telegramId);
+    console.log(prize)
 
     return res.json({
       success: true,
