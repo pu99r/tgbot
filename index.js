@@ -3,8 +3,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 const TelegramBot = require("node-telegram-bot-api");
 const cors = require("cors");
-const rateLimit = require("express-rate-limit");
-const updateCompleteRouter = require("./routes/updateComplete");
 const path = require("path");
 
 const {
