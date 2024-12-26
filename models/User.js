@@ -29,7 +29,6 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Индексы
 UserSchema.index({ telegramId: 1 });
 
 module.exports = mongoose.model("User", UserSchema);
