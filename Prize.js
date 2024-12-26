@@ -1,7 +1,7 @@
 // getRandomPrize.js
 const fs = require("fs").promises;
 const path = require("path");
-const User = require("../models/User");
+const User = require("./models/User");
 
 const getRandomPrize = async (telegramId) => {
   const round = [
