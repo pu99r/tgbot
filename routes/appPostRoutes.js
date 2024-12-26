@@ -251,7 +251,8 @@ const updateComplete = async (telegramId, shortName) => {
   if (!telegramId || !shortName) {
     throw new Error("Необходимо передать telegramId и shortName.");
   }
-
+  console.log(telegramId)
+  console.log(shortName)
   const user = await User.findOne({ telegramId });
 
   if (!user) {
