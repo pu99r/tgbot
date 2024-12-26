@@ -2,6 +2,26 @@ const fs = require("fs").promises;
 const User = require("../models/User");
 const projects = require('./tasks');
 
+const parseInitData = (initData) => {
+  try {
+    const params = new URLSearchParams(initData);
+    const userParam = params.get("user");
+    return userParam ? JSON.parse(decodeURIComponent(userParam)) : null;
+  } catch (error) {
+    console.error("Ошибка парсинга initData:", error);
+    return null;
+  }
+};
+
+const formatDate = (date) => {
+  const pad = (n) => (n < 10 ? `0${n}` : n);
+  return `${pad(date.getDate())}:${pad(
+    date.getMonth() + 1
+  )}:${date.getFullYear()}_${pad(date.getHours())}:${pad(
+    date.getMinutes()
+  )}:${pad(date.getSeconds())}`;
+};
+
 const getRandomPrize = async (telegramId) => {
   const round = [
     "iphone",
@@ -17,7 +37,8 @@ const getRandomPrize = async (telegramId) => {
     "0",
     "500",
   ];
-  const prizes = ["iphone", "40.000", "30.000", "10.000", "500", "0"];
+  // const prizes = ["iphone", "40.000", "30.000", "10.000", "500", "0"];
+  const prizes = ["500"];
   const priz = prizes[Math.floor(Math.random() * prizes.length)];
   const indices = round
     .map((value, index) => (value === priz ? index : -1))
@@ -114,27 +135,6 @@ const handleUpdateSpins = async (req, res) => {
       .status(500)
       .json({ success: false, message: "Внутренняя ошибка сервера." });
   }
-};
-
-
-const parseInitData = (initData) => {
-  try {
-    const params = new URLSearchParams(initData);
-    const userParam = params.get("user");
-    return userParam ? JSON.parse(decodeURIComponent(userParam)) : null;
-  } catch (error) {
-    console.error("Ошибка парсинга initData:", error);
-    return null;
-  }
-};
-
-const formatDate = (date) => {
-  const pad = (n) => (n < 10 ? `0${n}` : n);
-  return `${pad(date.getDate())}:${pad(
-    date.getMonth() + 1
-  )}:${date.getFullYear()}_${pad(date.getHours())}:${pad(
-    date.getMinutes()
-  )}:${pad(date.getSeconds())}`;
 };
 
 const handleWebAppData = async (req, res) => {
