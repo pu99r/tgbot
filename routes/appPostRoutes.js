@@ -44,6 +44,78 @@ const getRandomPrize = async (telegramId) => {
   }
   return { value: priz, degree: indexof * 30 + 15 };
 };
+const handleUpdateSpins = async (req, res) => {
+  try {
+    const { initData, operation } = req.body;
+
+    if (!initData || !operation) {
+      return res.status(400).json({
+        success: false,
+        message: "Необходимо передать initData и operation (plus/minus).",
+      });
+    }
+
+    if (!["plus", "minus"].includes(operation)) {
+      return res.status(400).json({
+        success: false,
+        message: "operation должно быть 'plus' или 'minus'.",
+      });
+    }
+
+    const userObj = parseInitData(initData);
+    if (!userObj) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Невалидный initData." });
+    }
+
+    const telegramId = userObj.id;
+    const user = await User.findOne({ telegramId });
+    
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Пользователь не найден." });
+    }
+
+    let spinslef = user.spins
+    // console.log(spinslef)
+    if ( spinslef <= 0 ) {
+      return res.json({
+        success: false,
+        message: `Нет спинов`,
+      });
+    }
+
+    if (operation === "plus") {
+      user.spins += 1;
+    } else {
+      if (user.spins > 0) {
+        user.spentSpins += 1; 
+      }
+      user.spins = Math.max(user.spins - 1, 0);
+    }
+
+    await user.save();
+    const prize = await getRandomPrize(telegramId);
+
+    return res.json({
+      success: true,
+      spins: user.spins,
+      spentSpins: user.spentSpins,
+      prize: prize,
+      message: `Spins успешно ${
+        operation === "plus" ? "увеличены" : "уменьшены"
+      }.`,
+    });
+  } catch (error) {
+    console.error("Ошибка /update-spins:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Внутренняя ошибка сервера." });
+  }
+};
+
 
 const parseInitData = (initData) => {
   try {
@@ -109,78 +181,6 @@ const handleWebAppData = async (req, res) => {
   }
 };
 
-const handleUpdateSpins = async (req, res) => {
-  try {
-    const { initData, operation } = req.body;
-
-    if (!initData || !operation) {
-      return res.status(400).json({
-        success: false,
-        message: "Необходимо передать initData и operation (plus/minus).",
-      });
-    }
-
-    if (!["plus", "minus"].includes(operation)) {
-      return res.status(400).json({
-        success: false,
-        message: "operation должно быть 'plus' или 'minus'.",
-      });
-    }
-
-    const userObj = parseInitData(initData);
-    if (!userObj) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Невалидный initData." });
-    }
-
-    const telegramId = userObj.id;
-    const user = await User.findOne({ telegramId });
-    
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Пользователь не найден." });
-    }
-
-    let spinslef = user.spins
-    // console.log(spinslef)
-    if ( spinslef <= 0 ) {
-      return res.json({
-        success: false,
-        message: `Нет спинов`,
-      });
-    }
-
-    if (operation === "plus") {
-      user.spins += 1;
-    } else {
-      if (user.spins > 0) {
-        user.spentSpins += 1; 
-      }
-      user.spins = Math.max(user.spins - 1, 0);
-    }
-
-    await user.save();
-    const prize = getRandomPrize(telegramId);
-    console.log(prize)
-
-    return res.json({
-      success: true,
-      spins: user.spins,
-      spentSpins: user.spentSpins,
-      prize: prize,
-      message: `Spins успешно ${
-        operation === "plus" ? "увеличены" : "уменьшены"
-      }.`,
-    });
-  } catch (error) {
-    console.error("Ошибка /update-spins:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Внутренняя ошибка сервера." });
-  }
-};
 
 const handleGift = async (req, res) => {
   try {
