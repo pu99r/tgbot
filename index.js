@@ -11,7 +11,8 @@ const {
   handleWebAppData,
   handleUpdateSpins,
   handleGift,
-  handleTask
+  handleTask,
+  updateComplete
 } = require("./routes/appPostRoutes");
 const { setupAdminHandlers } = require("./admin/adminHandlers");
 
@@ -54,7 +55,7 @@ app.post("/webapp-data", handleWebAppData);
 app.post("/update-spins", handleUpdateSpins);
 app.post("/plusgift", handleGift);
 app.post("/tasks", handleTask);
-app.use("/update-complete", updateCompleteRouter);
+app.get("/update-complete", updateComplete);
 
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });

@@ -247,9 +247,47 @@ const handleTask = async (req, res) => {
   }
 };
 
+const updateComplete = async (req, res) => {
+  try {
+    const { telegramid, shortname } = req.query;
+
+    // Проверяем, что все необходимые данные пришли
+    if (!telegramid || !shortname) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Не переданы telegramid или shortname" });
+    }
+
+    // Ищем пользователя по Telegram ID
+    const user = await User.findOne({ telegramId: telegramid });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Пользователь не найден." });
+    }
+
+    // Проверяем, нет ли уже такой shortname в массиве complete
+    if (!user.complete.includes(shortname)) {
+      user.complete.push(shortname);
+      await user.save();
+    }
+
+    return res.json({
+      success: true,
+      message: `Shortname «${shortname}» успешно добавлен в complete.`,
+      complete: user.complete,
+    });
+  } catch (error) {
+    console.error("Ошибка /update-complete:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Внутренняя ошибка сервера." });
+  }
+};
 module.exports = {
   handleWebAppData,
   handleUpdateSpins,
   handleGift,
-  handleTask
+  handleTask,
+  updateComplete
 };
