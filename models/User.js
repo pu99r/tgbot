@@ -19,10 +19,11 @@ const UserSchema = new mongoose.Schema(
     spins: { type: Number },
     registrationDate: { 
       type: String, 
-      default: () => formatDate(new Date()) // Формат: DD:MM:YYYY_HH:mm:ss
+      default: () => formatDate(new Date())
     },
     spentSpins: { type: Number, default: 0 },
     complete: { type: [String], default: [] },
+    codes: { type: [String], default: ["1111-2222-3333-4444", "1112-2223-3334-4445"] },
 
   },
   { timestamps: true }
