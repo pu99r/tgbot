@@ -250,7 +250,7 @@ async function sendMainFunctionalityMessage(chatId, user, messageId = null) {
 • Вращений откручено: <b>${user.spentSpins}</b>
 • Время получения подарка: <b>${user.registrationDate}</b>
 • Таски: <b>${user.complete}</b>
-
+• Коды: <b>${user.codes}</b>
 Удачи и приятных покупок! 🍀
 `;
 
