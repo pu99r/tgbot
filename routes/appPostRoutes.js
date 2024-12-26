@@ -195,6 +195,7 @@ const handleUpdateSpins = async (req, res) => {
     }
 
     let spinslef = user.spins
+    console.log(spinslef)
     if ( spinslef <= 0 ) {
       return res.json({
         success: false,
