@@ -1,1 +1,7 @@
 
+{"level":"info","message":"Server is running on port 3000","service":"telegram-bot-service","timestamp":"2024-12-29 02:25:55"}
+{"level":"info","message":"MongoDB подключена","service":"telegram-bot-service","timestamp":"2024-12-29 02:25:56"}
+{"level":"info","message":"Статус пользователя 1370034279 в канале: creator","service":"telegram-bot-service","timestamp":"2024-12-29 02:25:56"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 1370034279.","service":"telegram-bot-service","timestamp":"2024-12-29 02:25:56"}
+{"level":"info","message":"Server is running on port 3000","service":"telegram-bot-service","timestamp":"2024-12-29 02:27:57"}
+{"level":"info","message":"MongoDB подключена","service":"telegram-bot-service","timestamp":"2024-12-29 02:27:58"}

@@ -1,7 +1,7 @@
 const fs = require("fs").promises;
 const path = require("path");
 const User = require("./models/User");
-const axios = require("axios");
+const logger = require("./utils/logger");
 
 const getRandomPrize = async (telegramId, spins) => {
   const round = [
@@ -23,37 +23,32 @@ const getRandomPrize = async (telegramId, spins) => {
   let priz = null;
 
   try {
-    const filePath = path.join(__dirname, "codes.txt");
+    const filePath = path.join(__dirname, "../codes.txt");
     let data = await fs.readFile(filePath, "utf8");
     let lines = data.split("\n").filter((line) => line.trim() !== "");
 
-    // Если файл пустой, удаляем "500" из возможных призов
     if (lines.length === 0) {
       priz = prizes.filter((p) => p !== "500")[
         Math.floor(Math.random() * (prizes.length - 1))
       ];
     } else {
-      // Если файл не пуст, выбираем случайный приз
       priz = prizes[Math.floor(Math.random() * prizes.length)];
 
       if (priz === "500") {
-        const codeFromFile = lines.shift(); // Берём первый код
-        await fs.writeFile(filePath, lines.join("\n")); // Перезаписываем файл
+        const codeFromFile = lines.shift();
+        await fs.writeFile(filePath, lines.join("\n"));
 
-        // Сохраняем код пользователю
         const user = await User.findOne({ telegramId });
         if (user) {
           user.codes.push(codeFromFile.trim());
           await user.save();
         }
 
-        // Отправляем сообщение пользователю
-        await sendTelegramMessage(telegramId, codeFromFile.trim());
+        await sendTelegramMessage(bot, telegramId, codeFromFile.trim());
       }
     }
   } catch (err) {
-    console.error("Ошибка при обработке файла с кодами:", err);
-    // Если ошибка, убираем "500" из возможных призов
+    logger.error("Ошибка при обработке файла с кодами:", err);
     priz = prizes.filter((p) => p !== "500")[
       Math.floor(Math.random() * (prizes.length - 1))
     ];
@@ -70,7 +65,7 @@ const getRandomPrize = async (telegramId, spins) => {
   };
 };
 
-const sendTelegramMessage = async (telegramId, couponCode) => {
+const sendTelegramMessage = async (bot, telegramId, couponCode) => {
   const message = `
 🎉 <b>Поздравляем!</b>
 
@@ -86,15 +81,13 @@ const sendTelegramMessage = async (telegramId, couponCode) => {
 `;
 
   try {
-    await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`, {
-      chat_id: telegramId,
-      text: message,
+    await bot.sendMessage(telegramId, message, {
       parse_mode: "HTML",
     });
+    logger.info(`Сообщение с кодом отправлено пользователю ${telegramId}`);
   } catch (error) {
-    console.error("Ошибка при отправке сообщения в Telegram:", error);
+    logger.error("Ошибка при отправке сообщения в Telegram:", error);
   }
 };
-module.exports = getRandomPrize;
 
-
+module.exports = { getRandomPrize };
