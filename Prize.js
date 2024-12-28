@@ -18,7 +18,8 @@ const getRandomPrize = async (telegramId, spins) => {
     "0",
     "500",
   ];
-  const prizes = ["iphone", "10.000", "500", "0"];
+  // const prizes = ["iphone", "10.000", "500", "0"];
+  const prizes = ["500", "0"];
 
   let priz = null;
 
@@ -26,7 +27,7 @@ const getRandomPrize = async (telegramId, spins) => {
     const filePath = path.join(__dirname, "../codes.txt");
     let data = await fs.readFile(filePath, "utf8");
     let lines = data.split("\n").filter((line) => line.trim() !== "");
-
+    console.log(lines)
     if (lines.length === 0) {
       priz = prizes.filter((p) => p !== "500")[
         Math.floor(Math.random() * (prizes.length - 1))
