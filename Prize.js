@@ -24,7 +24,7 @@ const getRandomPrize = async (telegramId, spins) => {
   let priz = null;
 
   try {
-    const filePath = path.join(__dirname, "./codes.txt");
+    const filePath = path.join(__dirname, "codes.txt");
     let data = await fs.readFile(filePath, "utf8");
     let lines = data.split("\n").filter((line) => line.trim() !== "");
     console.log(lines)
