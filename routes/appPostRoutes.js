@@ -255,7 +255,7 @@ const handleWebAppData = async (req, res) => {
       registrationDate: user.registrationDate,
       spentSpins: user.spentSpins,
       codes: user.codes,
-      referalList: allReferrals, // Добавляем массив username рефералов
+      referralList: allReferrals, // Добавляем массив username рефералов
     });
   } catch (error) {
     console.error("Ошибка /webapp-data:", error);
