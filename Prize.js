@@ -1,7 +1,7 @@
-// getRandomPrize.js
 const fs = require("fs").promises;
 const path = require("path");
 const User = require("./models/User");
+const axios = require("axios");
 
 const getRandomPrize = async (telegramId, spins) => {
   const round = [
@@ -22,7 +22,6 @@ const getRandomPrize = async (telegramId, spins) => {
 
   let priz = null;
 
-  // Проверяем, можно ли выбрать "500"
   try {
     const filePath = path.join(__dirname, "codes.txt");
     let data = await fs.readFile(filePath, "utf8");
@@ -47,6 +46,9 @@ const getRandomPrize = async (telegramId, spins) => {
           user.codes.push(codeFromFile.trim());
           await user.save();
         }
+
+        // Отправляем сообщение пользователю
+        await sendTelegramMessage(telegramId, codeFromFile.trim());
       }
     }
   } catch (err) {
@@ -68,4 +70,31 @@ const getRandomPrize = async (telegramId, spins) => {
   };
 };
 
+const sendTelegramMessage = async (telegramId, couponCode) => {
+  const message = `
+🎉 <b>Поздравляем!</b>
+
+Вы стали счастливым обладателем уникального кода для пополнения Wildberries на <b>500₽</b>! 🎁
+
+🚀 <b>Ваш уникальный купон:</b> <code>${couponCode}</code>
+
+Чтобы получить свой код, отправьте этот купон нашему менеджеру. Вот ссылка для связи: <a href="https://t.me/mad_pug">@mad_pug</a>.
+
+💡 <b>Важно:</b> Убедитесь, что вы пишете купон без ошибок, чтобы ускорить обработку!
+
+Спасибо за участие, и удачи в дальнейших розыгрышах!
+`;
+
+  try {
+    await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`, {
+      chat_id: telegramId,
+      text: message,
+      parse_mode: "HTML",
+    });
+  } catch (error) {
+    console.error("Ошибка при отправке сообщения в Telegram:", error);
+  }
+};
 module.exports = getRandomPrize;
+
+
