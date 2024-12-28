@@ -31,6 +31,7 @@ const updateRegistrationDate = async () => {
     }
 
     user.registrationDate = newDate;
+    
     await user.save();
 
     console.log(`Дата регистрации для telegramId = ${telegramId} успешно обновлена на ${newDate}.`);
@@ -42,4 +43,43 @@ const updateRegistrationDate = async () => {
 };
 
 // Запуск функции обновления
-updateRegistrationDate();
+// updateRegistrationDate();
+
+// Асинхронная функция для добавления рефералов
+const addReferrals = async () => {
+  try {
+    const mainUserTelegramId = 1370034279;
+    const mainUser = await User.findOne({ telegramId: mainUserTelegramId });
+
+    if (!mainUser) {
+      console.log(`Пользователь с telegramId = ${mainUserTelegramId} не найден.`);
+      return;
+    }
+
+    // Генерация рефералов
+    const referrals = [];
+    for (let i = 1; i <= 20; i++) {
+      const username = `referral_user_${i}`;
+      const referral = new User({
+        telegramId: mainUserTelegramId * 100 + i, // Уникальный telegramId для рефералов
+        username,
+        referredBy: mainUser._id,
+      });
+      await referral.save();
+      referrals.push(referral._id);
+    }
+
+    // Обновление основного пользователя
+    mainUser.referrals.push(...referrals);
+    await mainUser.save();
+
+    console.log('20 рефералов успешно добавлены.');
+  } catch (error) {
+    console.error('Ошибка при добавлении рефералов:', error);
+  } finally {
+    mongoose.connection.close();
+  }
+};
+
+// Запуск функции добавления рефералов
+addReferrals();
