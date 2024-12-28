@@ -25,15 +25,9 @@ const UserSchema = new mongoose.Schema(
     },
     spentSpins: { type: Number, default: 0 },
     complete: { type: [String], default: [] },
-    codes: {
-      type: [String],
-      default: ["1111-2222-3333-4444", "1112-2223-3334-4445"],
-    },
+    codes: { type: [String] },
   },
   { timestamps: true }
 );
-
-// Удалили повторный index, т.к. уже есть unique: true
-// UserSchema.index({ telegramId: 1 });
 
 module.exports = mongoose.model("User", UserSchema);

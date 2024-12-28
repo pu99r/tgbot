@@ -95,52 +95,6 @@ const handleUpdateSpins = async (req, res) => {
   }
 };
 
-// const handleWebAppData = async (req, res) => {
-//   try {
-//     const { initData } = req.body;
-//     if (!initData) {
-//       return res
-//         .status(400)
-//         .json({ success: false, message: "initData не передан." });
-//     }
-
-//     const userObj = parseInitData(initData);
-//     if (!userObj) {
-//       return res
-//         .status(400)
-//         .json({ success: false, message: "Невалидный initData." });
-//     }
-
-//     const telegramId = userObj.id;
-//     const user = await User.findOne({ telegramId });
-//     if (!user) {
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "Пользователь не найден." });
-//     }
-
-//     const referralsCount = await User.countDocuments({ referredBy: user._id });
-//     const userReferralCode = `ref_${user.telegramId}`;
-
-//     res.send({
-//       success: true,
-//       referralCode: userReferralCode,
-//       botUsername: process.env.BOT_USERNAME,
-//       referralsCount,
-//       spins: user.spins,
-//       registrationDate: user.registrationDate,
-//       spentSpins: user.spentSpins,
-//       codes: user.codes,
-//       allreferrals: ["11", "22"],
-//     });
-//   } catch (error) {
-//     console.error("Ошибка /webapp-data:", error);
-//     res
-//       .status(500)
-//       .json({ success: false, message: "Внутренняя ошибка сервера." });
-//   }
-// };
-
 const handleGift = async (req, res) => {
   try {
     const { initData } = req.body;
@@ -263,6 +217,7 @@ const updateComplete = async (req, res) => {
       .json({ success: false, message: "Внутренняя ошибка сервера." });
   }
 };
+
 const handleWebAppData = async (req, res) => {
   try {
     const { initData } = req.body;
