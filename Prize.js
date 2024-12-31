@@ -7,13 +7,13 @@ const getRandomPrize = async (telegramId, spins) => {
     "iphone",
     "0",
     "10.000",
+    "5.000",
+    "0",
+    "500",
     "30.000",
     "0",
     "500",
-    "40.000",
-    "0",
-    "500",
-    "10.000",
+    "5.000",
     "0",
     "500",
   ];
@@ -29,7 +29,7 @@ const getRandomPrize = async (telegramId, spins) => {
     console.error("Ошибка при проверке файла с кодами:", err);
   }
 
-  const prizes = ["iphone", "10.000", "0"];
+  const prizes = ["iphone", "5.000", "0"];
   if (isCodesFileNotEmpty) {
     prizes.push("500");
   }
