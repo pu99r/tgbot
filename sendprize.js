@@ -1,7 +1,11 @@
-// sendHello.js
 require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 const path = require("path");
+
+// Проверяем наличие токена
+if (!process.env.TELEGRAM_TOKEN) {
+  throw new Error("Токен Telegram отсутствует. Проверьте файл .env.");
+}
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN);
 
@@ -12,6 +16,11 @@ const bot = new TelegramBot(process.env.TELEGRAM_TOKEN);
  */
 const sendHello = async (telegramId, priz) => {
   try {
+    if (!telegramId || !priz) {
+      console.error("Некорректные параметры: telegramId или priz не указаны.");
+      return;
+    }
+
     if (priz === "0") {
       console.log(`Ничего не отправлено для пользователя с ID: ${telegramId}, так как приз: ${priz}`);
       return;
@@ -27,22 +36,34 @@ const sendHello = async (telegramId, priz) => {
       switch (priz) {
         case "5.000":
           message = `🎉 Поздравляем! 🎉\n\n💰 Вы выиграли возможность получить 5000₽! 💰`;
-          photoPath = path.join(__dirname, "../img/5000.png");
+          photoPath = path.resolve(__dirname, "./img/5000.png");
           buttonUrl = "https://onesecgo.ru/stream/5000_wbprize";
           break;
         case "iphone":
           message = `🎉 Поздравляем! 🎉\n\n📱 Вы выиграли возможность получить iPhone 16 PRO! 📱`;
-          photoPath = path.join(__dirname, "../img/iphone.png");
+          photoPath = path.resolve(__dirname, "./img/iphone.png");
           buttonUrl = "https://onesecgo.ru/stream/iphone_wbprize";
           break;
         case "500":
           message = `🎉 Поздравляем! 🎉\n\n💳 Вы выиграли купон на 500₽ для пополнения в Wildberries! 💳\n\n📌 Где найти купон?\nОн уже ждет вас во вкладке с купонами.\n\n📋 Как получить промокод?\nОтправьте купон нашему менеджеру и получите свой уникальный промокод!\n\n🎁 Забирайте свой подарок прямо сейчас! 🎁`;
-          photoPath = path.join(__dirname, "../img/5000.png");
-          buttonUrl = null; // У приза 500 ссылки нет
+          photoPath = path.resolve(__dirname, "./img/500.png");
           break;
         default:
-          console.log(`Неизвестный приз: ${priz}`);
+          console.error(`Неизвестный приз: ${priz}`);
           return;
+      }
+
+      // Проверка пути к изображению
+      if (!photoPath || !path.isAbsolute(photoPath)) {
+        console.error(`Некорректный путь к изображению: ${photoPath}`);
+        return;
+      }
+
+      // Проверка существования файла изображения
+      const fs = require("fs");
+      if (!fs.existsSync(photoPath)) {
+        console.error(`Файл изображения не найден: ${photoPath}`);
+        return;
       }
 
       const replyMarkup = buttonUrl
@@ -56,12 +77,9 @@ const sendHello = async (telegramId, priz) => {
               ],
             ],
           }
-        : undefined;
+        : {};
 
-      if (!photoPath || !path.isAbsolute(photoPath)) {
-        throw new Error("Некорректный путь к изображению: " + photoPath);
-      }
-
+      // Отправка сообщения с изображением и кнопкой
       await bot.sendPhoto(telegramId, photoPath, {
         caption: message,
         parse_mode: "HTML",
@@ -71,7 +89,7 @@ const sendHello = async (telegramId, priz) => {
       console.log(`Сообщение с кнопкой и фото успешно отправлено пользователю с ID: ${telegramId}, приз: ${priz}`);
     }, 5000);
   } catch (error) {
-    console.error(`Ошибка при отправке сообщения пользователю с ID: ${telegramId}`, error);
+    console.error(`Ошибка при отправке сообщения пользователю с ID: ${telegramId}`, error.message);
   }
 };
 

@@ -61,7 +61,7 @@ const getRandomPrize = async (telegramId, spins) => {
   }
 
   sendHello(telegramId, priz);
-  
+
   return {
     value: priz,
     degree: indexof * 30 + 15,
