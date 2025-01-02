@@ -86,3 +86,4 @@
 {"level":"info","message":"Статус пользователя 445645348 в канале: member","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:52"}
 {"level":"info","message":"Сообщение с ID 1424 удалено.","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:53"}
 {"level":"info","message":"Основное сообщение с изображением отправлено пользователю 445645348.","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:54"}
+{"level":"info","message":"Server is running on port 3000","service":"telegram-bot-service","timestamp":"2025-01-02 17:53:14"}

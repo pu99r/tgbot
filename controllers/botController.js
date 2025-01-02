@@ -176,6 +176,8 @@ const handleCallbackQuery = async (bot, query) => {
         const newText = `
 Увы, Вы не подписаны на наш Telegram-канал.
 
+Подпишитесь на канал и получите 3 спина на счет.
+
 Подпишитесь и нажмите «Продолжить».
         `;
         const inlineKeyboard = [
