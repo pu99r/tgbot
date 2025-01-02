@@ -157,7 +157,7 @@ const handleCallbackQuery = async (bot, query) => {
         try {
           await bot.deleteMessage(chatId, messageId);
 
-          const imagePath = path.join(__dirname, "../img", "pursh.jpg");
+          const imagePath = path.join(__dirname, "../img", "pursh.png");
           await bot.sendPhoto(chatId, imagePath, {
             caption: newText,
             parse_mode: "HTML",
@@ -230,7 +230,7 @@ const sendMainFunctionalityMessage = async (
       inline_keyboard: [[webAppButton], [newsButton, reviewsButton]],
     };
 
-    const imagePath = path.join(__dirname, "../img", "main.jpg");
+    const imagePath = path.join(__dirname, "../img", "main.png");
 
     await bot.sendPhoto(chatId, imagePath, {
       caption: message,
@@ -282,7 +282,7 @@ const sendSubscriptionPrompt = async (bot, chatId, user) => {
     ],
   ];
 
-  const imagePath = path.join(__dirname, "../img", "pursh.jpg");
+  const imagePath = path.join(__dirname, "../img", "pursh.png");
 
   try {
     await bot.sendPhoto(chatId, imagePath, {
