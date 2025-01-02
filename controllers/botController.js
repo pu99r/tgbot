@@ -1,7 +1,7 @@
 // controllers/botController.js
 const TelegramBot = require("node-telegram-bot-api");
 const path = require("path");
-const fetch = require("node-fetch"); // убедитесь, что у вас установлен node-fetch
+// const fetch = require("node-fetch"); // убедитесь, что у вас установлен node-fetch
 const User = require("../models/User");
 const logger = require("../utils/logger");
 

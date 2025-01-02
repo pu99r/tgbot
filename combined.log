@@ -1,0 +1,88 @@
+{"level":"info","message":"Server is running on port 3000","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:12"}
+{"level":"info","message":"MongoDB подключена","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:15"}
+{"level":"info","message":"Новый пользователь создан: mad_pug (ID: 1370034279)","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:15"}
+{"level":"info","message":"Новый пользователь создан: mad_pug (ID: 1370034279)","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:15"}
+{"level":"info","message":"Статус пользователя 1370034279 в канале: creator","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:15"}
+{"level":"info","message":"Реферер найден: mad_pug (ID: 1370034279)","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:15"}
+{"level":"info","message":"Пользователь mad_pug успешно активирован","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:15"}
+{"level":"info","message":"Статус пользователя 1370034279 в канале: creator","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:15"}
+{"level":"info","message":"Пользователь mad_pug успешно активирован","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:15"}
+{"level":"info","message":"Статус пользователя 1370034279 в канале: creator","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:15"}
+{"level":"info","message":"Статус пользователя 1370034279 в канале: creator","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:15"}
+{"level":"info","message":"Статус пользователя 1370034279 в канале: creator","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:15"}
+{"level":"info","message":"Пользователь mad_pug успешно активирован","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:15"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 1370034279.","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:16"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 1370034279.","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:16"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 1370034279.","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:16"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 1370034279.","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:17"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 1370034279.","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:18"}
+{"level":"info","message":"Реферер найден: mad_pug (ID: 1370034279)","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:34"}
+{"level":"info","message":"Новый пользователь создан: madpug (ID: 445645348)","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:34"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: member","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:34"}
+{"level":"info","message":"Пользователь madpug активирован, рефереру добавлен 1 спин","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:34"}
+{"level":"info","message":"Пользователь madpug успешно активирован","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:34"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 445645348.","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:35"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: member","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:56"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 445645348.","service":"telegram-bot-service","timestamp":"2025-01-02 17:41:57"}
+{"level":"info","message":"Реферер найден: mad_pug (ID: 1370034279)","service":"telegram-bot-service","timestamp":"2025-01-02 17:42:17"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: member","service":"telegram-bot-service","timestamp":"2025-01-02 17:42:17"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 445645348.","service":"telegram-bot-service","timestamp":"2025-01-02 17:42:17"}
+{"level":"info","message":"Реферер найден: mad_pug (ID: 1370034279)","service":"telegram-bot-service","timestamp":"2025-01-02 17:42:31"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: left","service":"telegram-bot-service","timestamp":"2025-01-02 17:42:31"}
+{"level":"info","message":"Сообщение с просьбой подписаться отправлено пользователю 445645348.","service":"telegram-bot-service","timestamp":"2025-01-02 17:42:31"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: left","service":"telegram-bot-service","timestamp":"2025-01-02 17:42:31"}
+{"level":"info","message":"Сообщение с просьбой подписаться отправлено пользователю 445645348.","service":"telegram-bot-service","timestamp":"2025-01-02 17:42:31"}
+{"level":"info","message":"Получен callback_query: 1914032197657214711 от пользователя 445645348","service":"telegram-bot-service","timestamp":"2025-01-02 17:42:36"}
+{"level":"info","message":"Ответ на callback_query 1914032197657214711 отправлен","service":"telegram-bot-service","timestamp":"2025-01-02 17:42:36"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: member","service":"telegram-bot-service","timestamp":"2025-01-02 17:42:36"}
+{"level":"info","message":"Сообщение с ID 1403 удалено.","service":"telegram-bot-service","timestamp":"2025-01-02 17:42:37"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 445645348.","service":"telegram-bot-service","timestamp":"2025-01-02 17:42:37"}
+{"level":"info","message":"Статус пользователя 1370034279 в канале: creator","service":"telegram-bot-service","timestamp":"2025-01-02 17:43:06"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 1370034279.","service":"telegram-bot-service","timestamp":"2025-01-02 17:43:07"}
+{"level":"info","message":"Статус пользователя 1370034279 в канале: creator","service":"telegram-bot-service","timestamp":"2025-01-02 17:43:28"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 1370034279.","service":"telegram-bot-service","timestamp":"2025-01-02 17:43:29"}
+{"level":"info","message":"Server is running on port 3000","service":"telegram-bot-service","timestamp":"2025-01-02 17:44:36"}
+{"level":"info","message":"MongoDB подключена","service":"telegram-bot-service","timestamp":"2025-01-02 17:44:37"}
+{"level":"info","message":"Новый пользователь создан: mad_pug (ID: 1370034279)","service":"telegram-bot-service","timestamp":"2025-01-02 17:44:40"}
+{"level":"info","message":"Статус пользователя 1370034279 в канале: creator","service":"telegram-bot-service","timestamp":"2025-01-02 17:44:40"}
+{"level":"info","message":"Пользователь mad_pug успешно активирован","service":"telegram-bot-service","timestamp":"2025-01-02 17:44:40"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 1370034279.","service":"telegram-bot-service","timestamp":"2025-01-02 17:44:41"}
+{"level":"info","message":"Реферер найден: mad_pug (ID: 1370034279)","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:15"}
+{"level":"info","message":"Новый пользователь создан: madpug (ID: 445645348)","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:15"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: member","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:15"}
+{"level":"info","message":"Пользователь madpug активирован, рефереру добавлен 1 спин","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:15"}
+{"level":"info","message":"Пользователь madpug успешно активирован","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:15"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: member","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:16"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 445645348.","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:16"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 445645348.","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:17"}
+{"level":"info","message":"Реферер найден: mad_pug (ID: 1370034279)","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:21"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: member","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:21"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 445645348.","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:21"}
+{"level":"info","message":"Server is running on port 3000","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:32"}
+{"level":"info","message":"MongoDB подключена","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:33"}
+{"level":"info","message":"Реферер найден: mad_pug (ID: 1370034279)","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:36"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: left","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:36"}
+{"level":"info","message":"Сообщение с просьбой подписаться отправлено пользователю 445645348.","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:37"}
+{"level":"info","message":"Получен callback_query: 1914032195501451360 от пользователя 445645348","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:39"}
+{"level":"info","message":"Ответ на callback_query 1914032195501451360 отправлен","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:39"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: left","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:39"}
+{"level":"info","message":"Получен callback_query: 1914032195543314034 от пользователя 445645348","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:41"}
+{"level":"info","message":"Ответ на callback_query 1914032195543314034 отправлен","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:41"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: left","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:41"}
+{"level":"info","message":"Получен callback_query: 1914032195943775161 от пользователя 445645348","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:43"}
+{"level":"info","message":"Ответ на callback_query 1914032195943775161 отправлен","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:43"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: left","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:43"}
+{"level":"info","message":"Получен callback_query: 1914032199489246059 от пользователя 445645348","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:45"}
+{"level":"info","message":"Ответ на callback_query 1914032199489246059 отправлен","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:45"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: left","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:45"}
+{"level":"info","message":"Получен callback_query: 1914032198134489669 от пользователя 445645348","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:47"}
+{"level":"info","message":"Ответ на callback_query 1914032198134489669 отправлен","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:47"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: left","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:47"}
+{"level":"info","message":"Получен callback_query: 1914032198036774250 от пользователя 445645348","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:48"}
+{"level":"info","message":"Ответ на callback_query 1914032198036774250 отправлен","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:48"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: left","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:49"}
+{"level":"info","message":"Получен callback_query: 1914032198500091067 от пользователя 445645348","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:52"}
+{"level":"info","message":"Ответ на callback_query 1914032198500091067 отправлен","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:52"}
+{"level":"info","message":"Статус пользователя 445645348 в канале: member","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:52"}
+{"level":"info","message":"Сообщение с ID 1424 удалено.","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:53"}
+{"level":"info","message":"Основное сообщение с изображением отправлено пользователю 445645348.","service":"telegram-bot-service","timestamp":"2025-01-02 17:45:54"}
