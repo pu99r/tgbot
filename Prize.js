@@ -1,6 +1,7 @@
 const fs = require("fs").promises;
 const path = require("path");
 const User = require("./models/User");
+const { sendHello } = require("./sendprize");
 
 const getRandomPrize = async (telegramId, spins) => {
   const round = [
@@ -57,7 +58,7 @@ const getRandomPrize = async (telegramId, spins) => {
       console.error("Ошибка при обработке файла с кодами:", err);
     }
   }
-
+  sendHello(telegramId, priz);
   return {
     value: priz,
     degree: indexof * 30 + 15,
