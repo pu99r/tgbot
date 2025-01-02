@@ -46,7 +46,7 @@ const sendHello = async (telegramId, priz) => {
           break;
         case "500":
           message = `🎉 Поздравляем! 🎉\n\n💳 Вы выиграли купон на 500₽ для пополнения в Wildberries!`;
-          photoPath = path.resolve(__dirname, "./img/5000.png");
+          photoPath = path.resolve(__dirname, "./img/500.png");
           break;
         default:
           console.error(`Неизвестный приз: ${priz}`);
