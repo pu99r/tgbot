@@ -1,41 +1,12 @@
 // controllers/botController.js
 const TelegramBot = require("node-telegram-bot-api");
 const path = require("path");
-const fetch = require("node-fetch"); // убедитесь, что у вас установлен node-fetch
 const User = require("../models/User");
 const logger = require("../utils/logger");
 
-const CHANNEL_ID = process.env.CHANNEL_ID;
+const CHANNEL_ID = process.env.CHANNEL_ID; // <-- добавляем
 
-// -- ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ АКТИВАЦИИ ПОЛЬЗОВАТЕЛЯ --
-/**
- * Если пользователь ещё не активирован (activated = false),
- * то выдать ему 3 спина и увеличить спин рефереру, если есть referredBy.
- * После чего выставить activated = true и сохранить.
- */
-async function activateUser(user) {
-  if (!user.activated) {
-    // Выдаём 3 спина самому пользователю
-    user.spins = 3;
-    user.activated = true;
-
-    // Если есть реферер, даём ему +1 спин
-    if (user.referredBy) {
-      await User.findByIdAndUpdate(user.referredBy, {
-        $push: { referrals: user._id },
-        $inc: { spins: 1 },
-      });
-      logger.info(
-        `Пользователь ${user.username} активирован, рефереру добавлен 1 спин`
-      );
-    }
-
-    await user.save();
-    logger.info(`Пользователь ${user.username} успешно активирован`);
-  }
-}
-
-// -- ОСНОВНАЯ ФУНКЦИЯ /start --
+// Функция обработки команды /start
 const handleStart = async (bot, msg, match) => {
   const chatId = msg.chat.id;
   const username =
@@ -44,7 +15,7 @@ const handleStart = async (bot, msg, match) => {
 
   let referredBy = null;
 
-  // Обработка реферальной ссылки: /start ref_12345678
+  // Обработка реферальной ссылки
   if (match[1] && match[1].startsWith("ref_")) {
     const referrerTelegramId = match[1].replace("ref_", "");
     try {
@@ -62,7 +33,7 @@ const handleStart = async (bot, msg, match) => {
     }
   }
 
-  // Обработка clickid: /start kt_XXXX
+  // Обработка clickid
   if (match[1] && match[1].startsWith("kt_")) {
     const clickid = match[1].replace("kt_", "");
     const url = `http://38.180.115.237/d2a046e/postback?subid=${encodeURIComponent(
@@ -83,37 +54,43 @@ const handleStart = async (bot, msg, match) => {
   try {
     let user = await User.findOne({ telegramId: chatId });
 
-    if (!user) {
-      // 1) Регистрируем пользователя СРАЗУ, но без спинов
+    if (user) {
+      let memberStatus;
+      try {
+        const res = await bot.getChatMember(CHANNEL_ID, chatId);
+        memberStatus = res.status;
+        logger.info(`Статус пользователя ${chatId} в канале: ${memberStatus}`);
+      } catch (err) {
+        logger.error("Ошибка при getChatMember:", err);
+        memberStatus = "left";
+      }
+
+      if (["member", "administrator", "creator"].includes(memberStatus)) {
+        await sendMainFunctionalityMessage(bot, chatId, user);
+      } else {
+        await sendSubscriptionPrompt(bot, chatId, user);
+      }
+    } else {
       user = new User({
         telegramId: chatId,
         username,
         referredBy,
-        spins: 0, // без спинов — выдадим позже после проверки подписки
-        activated: false, // специальный флаг, чтобы не выдавать спины повторно
+        spins: 3,
       });
       await user.save();
       logger.info(`Новый пользователь создан: ${username} (ID: ${chatId})`);
-    }
 
-    // 2) Проверяем статус подписки
-    let memberStatus;
-    try {
-      const res = await bot.getChatMember(CHANNEL_ID, chatId);
-      memberStatus = res.status;
-      logger.info(`Статус пользователя ${chatId} в канале: ${memberStatus}`);
-    } catch (err) {
-      logger.error("Ошибка при getChatMember:", err);
-      memberStatus = "left";
-    }
+      if (referredBy) {
+        await User.findByIdAndUpdate(referredBy, {
+          $push: { referrals: user._id },
+          $inc: { spins: 1 },
+        });
+        logger.info(
+          `Пользователь ${username} добавлен в рефералы, spins реферера увеличено на 1`
+        );
+      }
 
-    if (["member", "administrator", "creator"].includes(memberStatus)) {
-      // Пользователь уже подписан, активируем (если не активирован) и отправляем основное меню
-      await activateUser(user);
-      await sendMainFunctionalityMessage(bot, chatId, user);
-    } else {
-      // Пользователь не подписан — просим подписаться
-      await sendSubscriptionPrompt(bot, chatId);
+      await sendSubscriptionPrompt(bot, chatId, user);
     }
   } catch (error) {
     logger.error("Ошибка при обработке команды /start:", error);
@@ -124,7 +101,7 @@ const handleStart = async (bot, msg, match) => {
   }
 };
 
-// -- ОБРАБОТКА CALLBACK_QUERY --
+// Функция обработки callback_query
 const handleCallbackQuery = async (bot, query) => {
   const chatId = query.message.chat.id;
   const messageId = query.message.message_id;
@@ -137,7 +114,6 @@ const handleCallbackQuery = async (bot, query) => {
 
   if (data === "check_subscribe") {
     try {
-      // Ответ пользователю о том, что идёт проверка
       await bot.answerCallbackQuery(callbackQueryId, {
         text: "⚠️ Пожалуйста, ожидайте, мы проверяем!",
       });
@@ -155,24 +131,9 @@ const handleCallbackQuery = async (bot, query) => {
 
       const user = await User.findOne({ telegramId: chatId });
 
-      if (!user) {
-        // Теоретически такого быть не должно, но на всякий случай
-        logger.warn(
-          `Пользователь c ID ${chatId} не найден в базе при check_subscribe`
-        );
-        await bot.sendMessage(
-          chatId,
-          "Произошла ошибка. Попробуйте заново набрать /start."
-        );
-        return;
-      }
-
       if (["member", "administrator", "creator"].includes(memberStatus)) {
-        // Пользователь подписан — активируем (если ещё не активирован) и отправляем основное сообщение
-        await activateUser(user);
         await sendMainFunctionalityMessage(bot, chatId, user, messageId);
       } else {
-        // По-прежнему не подписан — удаляем старое сообщение и показываем заново
         const newText = `
 Увы, Вы не подписаны на наш Telegram-канал.
 
@@ -194,7 +155,6 @@ const handleCallbackQuery = async (bot, query) => {
         ];
 
         try {
-          // Удаляем предыдущее сообщение
           await bot.deleteMessage(chatId, messageId);
 
           const imagePath = path.join(__dirname, "../img", "pursh.png");
@@ -204,7 +164,7 @@ const handleCallbackQuery = async (bot, query) => {
             reply_markup: { inline_keyboard: inlineKeyboard },
           });
         } catch (error) {
-          logger.error("Ошибка при обновлении сообщения подписки:", error);
+          logger.error("Ошибка при отправке нового сообщения:", error);
         }
       }
     } catch (error) {
@@ -217,14 +177,13 @@ const handleCallbackQuery = async (bot, query) => {
   }
 };
 
-// -- ОТПРАВКА ОСНОВНОГО СООБЩЕНИЯ --
+// Функция отправки основного сообщения
 const sendMainFunctionalityMessage = async (
   bot,
   chatId,
   user,
   messageId = null
 ) => {
-  // Если передан messageId, то удаляем старое сообщение
   if (messageId) {
     try {
       await bot.deleteMessage(chatId, messageId);
@@ -233,7 +192,6 @@ const sendMainFunctionalityMessage = async (
       logger.error(`Ошибка при удалении сообщения ${messageId}:`, err);
     }
   }
-
   try {
     const referralsCount = await User.countDocuments({ referredBy: user._id });
     const userReferralCode = `ref_${user.telegramId}`;
@@ -292,12 +250,12 @@ const sendMainFunctionalityMessage = async (
   }
 };
 
-// -- ПРОСЬБА ПОДПИСАТЬСЯ --
-const sendSubscriptionPrompt = async (bot, chatId) => {
+// Функция отправки запроса на подписку
+const sendSubscriptionPrompt = async (bot, chatId, user) => {
   const welcomeText = `
 🎉 <b>Добро пожаловать в WB Рулетку!</b>
 
-Чтобы получить <b>3 БЕСПЛАТНЫХ ПРОКРУТА КОЛЕСА</b>, нужно подписаться на наш канал. 
+Получите <b>3 БЕСПЛАТНЫХ ПРОКРУТА КОЛЕСА</b> прямо сейчас! 
 Это ваш шанс выиграть отличные подарочные купоны на покупки.
 
 🛡️ <b>Для активации:</b>
@@ -334,14 +292,14 @@ const sendSubscriptionPrompt = async (bot, chatId) => {
     });
 
     logger.info(
-      `Сообщение с просьбой подписаться отправлено пользователю ${chatId}.`
+      `Приветственное сообщение с изображением отправлено пользователю ${chatId}.`
     );
   } catch (error) {
     logger.error("Ошибка при отправке приветственного сообщения:", error);
   }
 };
 
-// -- ИНИЦИАЛИЗАЦИЯ ОБРАБОТЧИКОВ --
+// Экспорт обработчиков
 const setupBotHandlers = (bot) => {
   // Обработка команды /start
   bot.onText(/\/start(?: (.+))?/, (msg, match) => {

@@ -26,6 +26,7 @@ const UserSchema = new mongoose.Schema(
     spentSpins: { type: Number, default: 0 },
     complete: { type: [String], default: [] },
     codes: { type: [String] },
+    activated: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
