@@ -9,11 +9,6 @@ if (!process.env.TELEGRAM_TOKEN) {
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN);
 
-/**
- * Функция для отправки сообщения пользователю с указанием приза.
- * @param {number} telegramId - Telegram ID пользователя.
- * @param {string} priz - Приз, который будет указан в сообщении.
- */
 const sendHello = async (telegramId, priz) => {
   try {
     if (!telegramId || !priz) {
