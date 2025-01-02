@@ -4,7 +4,6 @@ const path = require("path");
 const ADMIN_ID = 1370034279; // ваш админский ID
 const User = require("../models/User");
 
-// Путь к файлу с купонами
 const codesFilePath = path.join(__dirname, "../codes.txt");
 
 // Флаги ожидания
@@ -41,7 +40,11 @@ const setupAdminHandlers = (bot) => {
     isWaitingForMessage = true;
     await bot.sendMessage(
       chatId,
-      "✉️ Введите сообщение для рассылки всем пользователям. Для отмены введите <b>-</b>.",
+      "✉️ Введите сообщение для рассылки всем пользователям. " +
+        "Вы можете добавить кнопку с ссылкой, указав:\n" +
+        "`LinkTitle=ТекстКнопки`\n" +
+        "`LinkUrl=https://...`\n\n" +
+        "Для отмены введите <b>-</b>.",
       { parse_mode: "HTML" }
     );
   });
@@ -89,20 +92,18 @@ const setupAdminHandlers = (bot) => {
     );
   });
 
-  // Общий обработчик сообщений (и для рассылки, и для добавления купонов)
+  // Общий обработчик сообщений
   bot.on("message", async (msg) => {
     const chatId = msg.chat.id;
-
-    // Если сообщение от не-админа — выходим
+    // Если сообщение от не-админа — пропускаем
     if (chatId !== ADMIN_ID) return;
-
-    // Если начинается с "/", считаем, что это другая команда
+    // Если текст начинается с "/", значит это другая команда
     if (msg.text && msg.text.startsWith("/")) return;
 
     // --- 1) Логика массовой рассылки ---
     if (isWaitingForMessage) {
+      // Проверка на отмену
       if (msg.text && msg.text.trim() === "-") {
-        // Отмена рассылки
         isWaitingForMessage = false;
         return bot.sendMessage(chatId, "❌ Рассылка отменена.");
       }
@@ -112,16 +113,59 @@ const setupAdminHandlers = (bot) => {
         const users = await User.find({}, "telegramId");
         let successCount = 0;
 
-        // Если в сообщении есть фото
+        // Если в сообщении есть фото (приоритетно обрабатываем фото)
         if (msg.photo && msg.photo.length > 0) {
-          const largestPhoto = msg.photo[msg.photo.length - 1].file_id;
-          const caption = msg.caption || ""; // подпись к фото
+          // Если хотим поддержать кнопку и при фото, нужно учитывать caption
+          // Парсим caption для кнопки или текста
+          const caption = msg.caption || "";
 
+          // Для кнопок создаём переменные
+          let linkTitle = null;
+          let linkUrl = null;
+
+          // Можно попробовать парсить caption по переносам строк
+          const lines = caption.split("\n").map((line) => line.trim());
+          // Соберём всё в отдельные переменные
+          let finalCaption = [];
+
+          for (const line of lines) {
+            if (line.startsWith("LinkTitle=")) {
+              linkTitle = line.replace("LinkTitle=", "").trim();
+            } else if (line.startsWith("LinkUrl=")) {
+              linkUrl = line.replace("LinkUrl=", "").trim();
+            } else {
+              finalCaption.push(line);
+            }
+          }
+
+          // Собираем caption обратно в строку
+          const messageText = finalCaption.join("\n");
+
+          // Формируем опции для отправки
+          const sendOptions = {
+            parse_mode: "HTML",
+          };
+
+          // Если у нас есть и title, и url, добавляем inline-кнопку
+          if (linkTitle && linkUrl) {
+            sendOptions.reply_markup = {
+              inline_keyboard: [
+                [
+                  {
+                    text: linkTitle,
+                    url: linkUrl,
+                  },
+                ],
+              ],
+            };
+          }
+
+          // Рассылаем фото
           for (const user of users) {
             try {
-              await bot.sendPhoto(user.telegramId, largestPhoto, {
-                caption: caption,
-                parse_mode: "HTML",
+              await bot.sendPhoto(user.telegramId, msg.photo[msg.photo.length - 1].file_id, {
+                caption: messageText,
+                ...sendOptions,
               });
               successCount++;
             } catch (error) {
@@ -134,12 +178,47 @@ const setupAdminHandlers = (bot) => {
         }
         // Если есть только текст
         else if (msg.text) {
-          const text = msg.text;
+          // Парсим текст на предмет кнопки
+          const lines = msg.text.split("\n").map((line) => line.trim());
+          let linkTitle = null;
+          let linkUrl = null;
+          let finalTextLines = [];
+
+          for (const line of lines) {
+            if (line.startsWith("LinkTitle=")) {
+              linkTitle = line.replace("LinkTitle=", "").trim();
+            } else if (line.startsWith("LinkUrl=")) {
+              linkUrl = line.replace("LinkUrl=", "").trim();
+            } else {
+              finalTextLines.push(line);
+            }
+          }
+
+          const messageText = finalTextLines.join("\n");
+
+          // Формируем опции для отправки
+          const sendOptions = {
+            parse_mode: "HTML",
+          };
+
+          // Если есть кнопка
+          if (linkTitle && linkUrl) {
+            sendOptions.reply_markup = {
+              inline_keyboard: [
+                [
+                  {
+                    text: linkTitle,
+                    url: linkUrl,
+                  },
+                ],
+              ],
+            };
+          }
+
+          // Рассылаем
           for (const user of users) {
             try {
-              await bot.sendMessage(user.telegramId, text, {
-                parse_mode: "HTML",
-              });
+              await bot.sendMessage(user.telegramId, messageText, sendOptions);
               successCount++;
             } catch (error) {
               console.error(
@@ -185,7 +264,6 @@ const setupAdminHandlers = (bot) => {
           .map((line) => line.trim())
           .filter((line) => line !== "");
 
-        // Если ничего не введено
         if (newCoupons.length === 0) {
           return bot.sendMessage(
             chatId,
@@ -193,7 +271,6 @@ const setupAdminHandlers = (bot) => {
           );
         }
 
-        // Добавляем в конец файла
         fs.appendFileSync(codesFilePath, "\n" + newCoupons.join("\n"));
 
         isWaitingForCoupons = false;
