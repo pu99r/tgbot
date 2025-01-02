@@ -45,7 +45,7 @@ const sendHello = async (telegramId, priz) => {
           buttonUrl = "https://onesecgo.ru/stream/iphone_wbprize";
           break;
         case "500":
-          message = `🎉 Поздравляем! 🎉\n\n💳 Вы выиграли купон на 500₽ для пополнения в Wildberries! 💳\n\n📌 Где найти купон?\nОн уже ждет вас во вкладке с купонами.\n\n📋 Как получить промокод?\nОтправьте купон нашему менеджеру и получите свой уникальный промокод!\n\n🎁 Забирайте свой подарок прямо сейчас! 🎁`;
+          message = `🎉 Поздравляем! 🎉\n\n💳 Вы выиграли купон на 500₽ для пополнения в Wildberries!`;
           photoPath = path.resolve(__dirname, "./img/5000.png");
           break;
         default:
