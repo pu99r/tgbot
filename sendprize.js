@@ -21,7 +21,7 @@ const sendHello = async (telegramId, priz) => {
       let message;
 
       switch (priz) {
-        case "5000":
+        case "5.000":
           message = `🎉 Поздравляем! 🎉\n\n💰 Вы выиграли возможность получить 5000₽! 💰\n\n<a href=\"https://onesecgo.ru/stream/5000_wbprize\">✨ Получить приз ✨</a>`;
           break;
         case "iphone":
