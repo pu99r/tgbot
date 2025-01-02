@@ -36,6 +36,7 @@ const getRandomPrize = async (telegramId, spins) => {
   }
 
   const priz = prizes[Math.floor(Math.random() * prizes.length)];
+
   const indices = round
     .map((value, index) => (value === priz ? index : -1))
     .filter((index) => index !== -1);
@@ -58,7 +59,9 @@ const getRandomPrize = async (telegramId, spins) => {
       console.error("Ошибка при обработке файла с кодами:", err);
     }
   }
+
   sendHello(telegramId, priz);
+  
   return {
     value: priz,
     degree: indexof * 30 + 15,
