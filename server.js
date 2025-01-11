@@ -25,8 +25,7 @@ const REQUIRED_ENV = [
   "WEB_APP_URL",
   "CHANNEL_ID",
   "MAINCHANNEL",
-  "OTZOVCHANNEL",
-  "APP_URL", // URL для Webhook (должен быть HTTPS в продакшене)
+  "OTZOVCHANNEL"
 ];
 
 // Проверка переменных окружения
@@ -38,7 +37,6 @@ if (missingEnv.length > 0) {
   process.exit(1);
 }
 
-// Подключение к MongoDB
 mongoose
   .connect(process.env.MONGODB_URL, {
     maxPoolSize: 10, // до 10 подключений
@@ -74,9 +72,6 @@ app.listen(PORT, () => {
 // Инициализируем бота без webHook.port
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
 
-// Устанавливаем Webhook — ваш APP_URL должен быть HTTPS
-const WEBHOOK_URL = `${process.env.APP_URL}/bot${bot.token}`;
-bot.setWebHook(WEBHOOK_URL);
 
 // Приём запросов на /bot<token>, пробрасываем в бота
 app.post(`/bot${bot.token}`, (req, res) => {

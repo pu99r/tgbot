@@ -27,6 +27,9 @@ const UserSchema = new mongoose.Schema(
     complete: { type: [String], default: [] },
     codes: { type: [String] },
     activated: { type: Boolean, default: false },
+    refweb: { type: String, default: "none" },
+    offercomplete: { type: [String], default: [] },
+
   },
   { timestamps: true }
 );

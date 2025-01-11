@@ -1,18 +1,10 @@
 // controllers/botController.js
 const TelegramBot = require("node-telegram-bot-api");
 const path = require("path");
-// const fetch = require("node-fetch"); // убедитесь, что у вас установлен node-fetch
 const User = require("../models/User");
 const logger = require("../utils/logger");
 
 const CHANNEL_ID = process.env.CHANNEL_ID;
-
-// -- ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ АКТИВАЦИИ ПОЛЬЗОВАТЕЛЯ --
-/**
- * Если пользователь ещё не активирован (activated = false),
- * то выдать ему 3 спина и увеличить спин рефереру, если есть referredBy.
- * После чего выставить activated = true и сохранить.
- */
 async function activateUser(user) {
   if (!user.activated) {
     // Выдаём 3 спина самому пользователю
@@ -43,40 +35,45 @@ const handleStart = async (bot, msg, match) => {
     `${msg.from.first_name || ""} ${msg.from.last_name || ""}`.trim();
 
   let referredBy = null;
+  let refweb = "none"; // По умолчанию
+  if (match[1]) {
+    const params = match[1].split("_");
+    if (params.length >= 2) {
+      if (params[0] === "ref") {
+        const referrerTelegramId = params[1];
+        try {
+          const referrer = await User.findOne({ telegramId: referrerTelegramId });
+          if (referrer) {
+            referredBy = referrer._id;
+            logger.info(
+              `Реферер найден: ${referrer.username} (ID: ${referrer.telegramId})`
+            );
+            // Устанавливаем refweb равным refweb реферера
+            refweb = referrer.refweb || "none";
+          } else {
+            logger.warn("Реферер не найден");
+          }
+        } catch (error) {
+          logger.error("Ошибка при поиске реферера:", error);
+        }
+      } else if (params[0] === "kt") {
+        // Обработка clickid: /start kt_XXXX_web1
+        const clickid = params[1];
+        refweb = params[2] || "none";
+        const url = `http://38.180.115.237/d2a046e/postback?subid=${encodeURIComponent(
+          clickid
+        )}&status=lead&from=TgBot`;
 
-  // Обработка реферальной ссылки: /start ref_12345678
-  if (match[1] && match[1].startsWith("ref_")) {
-    const referrerTelegramId = match[1].replace("ref_", "");
-    try {
-      const referrer = await User.findOne({ telegramId: referrerTelegramId });
-      if (referrer) {
-        referredBy = referrer._id;
-        logger.info(
-          `Реферер найден: ${referrer.username} (ID: ${referrer.telegramId})`
-        );
-      } else {
-        logger.warn("Реферер не найден");
+        try {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`Ошибка сети: ${response.status}`);
+          }
+          logger.info(`Postback отправлен успешно для clickid: ${clickid}`);
+        } catch (error) {
+          logger.error("Произошла ошибка при выполнении postback:", error);
+        }
       }
-    } catch (error) {
-      logger.error("Ошибка при поиске реферера:", error);
-    }
-  }
-
-  // Обработка clickid: /start kt_XXXX
-  if (match[1] && match[1].startsWith("kt_")) {
-    const clickid = match[1].replace("kt_", "");
-    const url = `http://38.180.115.237/d2a046e/postback?subid=${encodeURIComponent(
-      clickid
-    )}&status=lead&from=TgBot`;
-
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Ошибка сети: ${response.status}`);
-      }
-      logger.info(`Postback отправлен успешно для clickid: ${clickid}`);
-    } catch (error) {
-      logger.error("Произошла ошибка при выполнении postback:", error);
     }
   }
 
@@ -84,19 +81,20 @@ const handleStart = async (bot, msg, match) => {
     let user = await User.findOne({ telegramId: chatId });
 
     if (!user) {
-      // 1) Регистрируем пользователя СРАЗУ, но без спинов
+      // Регистрируем пользователя с refweb
       user = new User({
         telegramId: chatId,
         username,
         referredBy,
         spins: 0, // без спинов — выдадим позже после проверки подписки
         activated: false, // специальный флаг, чтобы не выдавать спины повторно
+        refweb: refweb // Сохраняем refweb
       });
       await user.save();
       logger.info(`Новый пользователь создан: ${username} (ID: ${chatId})`);
     }
 
-    // 2) Проверяем статус подписки
+    // Проверяем статус подписки
     let memberStatus;
     try {
       const res = await bot.getChatMember(CHANNEL_ID, chatId);
@@ -266,7 +264,7 @@ const sendMainFunctionalityMessage = async (
 Делитесь своей реферальной ссылкой и получайте дополнительные вращения:  
 <a href="${referralLink || "#"}">${referralLink || "Реферальная ссылка"}</a>  
 • Приглашено друзей: <b>${referralsCount || 0}</b>
-
+• Веб: <b>${user.refweb}</b>
 🔥 Подарочные купоны ждут вас прямо сейчас! Начните игру и станьте одним из победителей! 🍀
 `;
 
