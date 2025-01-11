@@ -83,7 +83,7 @@ const sendHello = async (telegramId, prizeName, prizeLink, prizeCaption) => {
       });
 
       console.log(`Сообщение с кнопкой и фото успешно отправлено пользователю с ID: ${telegramId}, приз: ${prizeName}`);
-    }, 5000); // Задержка 5000 мс = 5 секунд
+    }, 10000); // Задержка 5000 мс = 5 секунд
   } catch (error) {
     console.error(`Ошибка при отправке сообщения пользователю с ID: ${telegramId}:`, error.message);
   }
