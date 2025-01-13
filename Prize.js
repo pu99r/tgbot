@@ -5,8 +5,8 @@ const User = require("./models/User");
 const prizesData = require("./prizes"); // Импортируем данные из prizes.js
 const { sendHello } = require("./sendprize"); // Убедитесь, что экспортируете sendHello корректно
 
-const chance0 = 2; // Вероятность ничего не выиграть
-const chance500 = 49; // Вероятность выиграть купон на 500₽
+const chance0 = 50; // Вероятность ничего не выиграть
+const chance500 = 1; // Вероятность выиграть купон на 500₽
 const chanceGroupPrize = 49; // Вероятность выиграть приз из группы
 
 const round = [
