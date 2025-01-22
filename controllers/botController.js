@@ -35,7 +35,8 @@ const handleStart = async (bot, msg, match) => {
     `${msg.from.first_name || ""} ${msg.from.last_name || ""}`.trim();
 
   let referredBy = null;
-  let refweb = "none"; // По умолчанию
+  let clickId = "none";
+
   if (match[1]) {
     const params = match[1].split("_");
     if (params.length >= 2) {
@@ -48,8 +49,6 @@ const handleStart = async (bot, msg, match) => {
             logger.info(
               `Реферер найден: ${referrer.username} (ID: ${referrer.telegramId})`
             );
-            // Устанавливаем refweb равным refweb реферера
-            refweb = referrer.refweb || "none";
           } else {
             logger.warn("Реферер не найден");
           }
@@ -57,22 +56,8 @@ const handleStart = async (bot, msg, match) => {
           logger.error("Ошибка при поиске реферера:", error);
         }
       } else if (params[0] === "kt") {
-        // Обработка clickid: /start kt_XXXX_web1
-        const clickid = params[1];
-        refweb = params[2] || "none";
-        const url = `http://38.180.115.237/d2a046e/postback?subid=${encodeURIComponent(
-          clickid
-        )}&status=lead&from=TgBot`;
-
-        try {
-          const response = await fetch(url);
-          if (!response.ok) {
-            throw new Error(`Ошибка сети: ${response.status}`);
-          }
-          logger.info(`Postback отправлен успешно для clickid: ${clickid}`);
-        } catch (error) {
-          logger.error("Произошла ошибка при выполнении postback:", error);
-        }
+        clickId = params[1];
+        logger.info(`Click ID найден: ${clickId}`);
       }
     }
   }
@@ -81,17 +66,22 @@ const handleStart = async (bot, msg, match) => {
     let user = await User.findOne({ telegramId: chatId });
 
     if (!user) {
-      // Регистрируем пользователя с refweb
+      // Регистрируем пользователя
       user = new User({
         telegramId: chatId,
         username,
         referredBy,
         spins: 0, // без спинов — выдадим позже после проверки подписки
         activated: false, // специальный флаг, чтобы не выдавать спины повторно
-        refweb: refweb // Сохраняем refweb
+        click_id: clickId, // Сохраняем click_id
       });
       await user.save();
       logger.info(`Новый пользователь создан: ${username} (ID: ${chatId})`);
+    } else if (clickId !== "none" && user.click_id === "none") {
+      // Обновляем click_id, если он ещё не был установлен
+      user.click_id = clickId;
+      await user.save();
+      logger.info(`Click ID обновлён для пользователя ${username} (ID: ${chatId})`);
     }
 
     // Проверяем статус подписки
@@ -264,6 +254,7 @@ const sendMainFunctionalityMessage = async (
 Делитесь своей реферальной ссылкой и получайте дополнительные вращения:  
 <a href="${referralLink || "#"}">${referralLink || "Реферальная ссылка"}</a>  
 • Приглашено друзей: <b>${referralsCount || 0}</b>
+• Click_id: <b>${user.click_id}</b>
 🔥 Подарочные купоны ждут вас прямо сейчас! Начните игру и станьте одним из победителей! 🍀
 `;
 

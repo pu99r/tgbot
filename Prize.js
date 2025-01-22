@@ -32,8 +32,6 @@ const getRandomPrize = async (telegramId, spins) => {
       console.error(`Пользователь с ID ${telegramId} не найден.`);
       return null;
     }
-    const refweb = user.refweb;
-    // Определяем, какие группы уже завершены
     const completedGroups = user.offercomplete || [];
 
     // Ищем первую не завершенную группу
@@ -82,7 +80,7 @@ const getRandomPrize = async (telegramId, spins) => {
         if (lines.length === 0) {
           console.log("Нет доступных кодов для приза 500. Выбираем другой приз.");
           // Если кодов нет, рекурсивно вызываем функцию для выбора другого приза
-          return await getRandomPrize(telegramId, spins, refweb);
+          return await getRandomPrize(telegramId, spins);
         }
 
         // Извлекаем первый доступный код
@@ -110,7 +108,7 @@ const getRandomPrize = async (telegramId, spins) => {
       } catch (err) {
         console.error("Ошибка при обработке файла codes.txt:", err);
         // В случае ошибки рекурсивно вызываем функцию для выбора другого приза
-        return await getRandomPrize(telegramId, spins, refweb);
+        return await getRandomPrize(telegramId, spins);
       }
     } else if (prizeType === "group") {
       // Приз из группы — выбираем случайный приз из выбранной группы
@@ -144,8 +142,8 @@ const getRandomPrize = async (telegramId, spins) => {
       degree = Math.floor(Math.random() * 360);
     }
 
-    // Формируем ссылку с параметрами sub1 и sub2
-    const sub1 = refweb || "none"; 
+    // Формируем ссылку с параметрами sub1 и sub2 refweb
+    const sub1 = user.click_id; 
     const sub2 = telegramId;
     let prizeLink = selectedPrize.link;
 
