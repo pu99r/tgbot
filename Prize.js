@@ -1,32 +1,26 @@
-// Prize.js
 const fs = require("fs").promises;
 const path = require("path");
 const User = require("./models/User");
-const prizesData = require("./prizes"); // Импортируем данные из prizes.js
-const { sendHello } = require("./sendprize"); // Убедитесь, что экспортируете sendHello корректно
+const prizesData = require("./prizes");
+const { sendHello } = require("./sendprize");
 
-const chance0 = 50; // Вероятность ничего не выиграть
-const chance500 = 1; // Вероятность выиграть купон на 500₽
-const chanceGroupPrize = 49; // Вероятность выиграть приз из группы
+const chance0 = 50;
+const chanceGroup2 = 30;
+const chanceGroup3 = 20;
+
+// Проверяем сумму вероятностей
+if (chance0 + chanceGroup2 + chanceGroup3 !== 100) {
+  throw new Error("Сумма вероятностей должна быть 100!");
+}
 
 const round = [
-  "iphone",
-  "0",
-  "10.000",
-  "5.000",
-  "0",
-  "500",
-  "30.000",
-  "0",
-  "500",
-  "5.000",
-  "0",
-  "500",
+  "iphone", "0", "10.000", "5.000", "0",
+  "star100", "30.000", "0", "star200",
+  "5.000", "0", "star300",
 ];
 
-const getRandomPrize = async (telegramId, spins) => {
+const getRandomPrize = async (telegramId) => {
   try {
-    // Получаем пользователя
     const user = await User.findOne({ telegramId });
     if (!user) {
       console.error(`Пользователь с ID ${telegramId} не найден.`);
@@ -34,131 +28,56 @@ const getRandomPrize = async (telegramId, spins) => {
     }
     const completedGroups = user.offercomplete || [];
 
-    // Ищем первую не завершенную группу
-    let selectedGroup = null;
-    for (const group of prizesData) {
-      if (!completedGroups.includes(group.group)) {
-        selectedGroup = group;
-        break;
-      }
-    }
+    let selectedGroup = prizesData.find(group => !completedGroups.includes(group.group));
 
-    // Если все группы завершены, выбираем первую группу по умолчанию
     if (!selectedGroup) {
-      selectedGroup = prizesData[0];
-    }
-
-    // Получаем все призы из выбранной группы
-    const groupPrizes = selectedGroup.prizes.map(prize => prize.name);
-
-    // Определяем тип приза на основе шансов
-    const randomChance = Math.floor(Math.random() * 100) + 1; // Число от 1 до 100
-    let prizeType = null;
-
-    if (randomChance <= chance0) {
-      prizeType = "0";
-    } else if (randomChance <= chance0 + chance500) {
-      prizeType = "500";
-    } else {
-      prizeType = "group";
-    }
-
-    let selectedPrize = null;
-
-    if (prizeType === "0") {
-      selectedPrize = {
-        name: "0",
-        link: null,
-        caption: null
-      };
-    } else if (prizeType === "500") {
-      // Приз "500" — купон на 500₽
-      const codesFilePath = path.join(__dirname, "codes.txt");
-      try {
-        const data = await fs.readFile(codesFilePath, "utf8");
-        const lines = data.split("\n").filter(line => line.trim() !== "");
-        if (lines.length === 0) {
-          console.log("Нет доступных кодов для приза 500. Выбираем другой приз.");
-          // Если кодов нет, рекурсивно вызываем функцию для выбора другого приза
-          return await getRandomPrize(telegramId, spins);
-        }
-
-        // Извлекаем первый доступный код
-        const code = lines.shift();
-
-        // Записываем оставшиеся коды обратно в файл
-        await fs.writeFile(codesFilePath, lines.join("\n"));
-
-        // Добавляем код пользователю
-        user.codes.push(code.trim());
-        await user.save();
-
-        // Находим приз в выбранной группе, если он там есть
-        const prizeData = selectedGroup.prizes.find(p => p.name === "500") || {
-          name: "500",
-          link: "none",
-          caption: "🎉 Поздравляем! Вы выиграли купон на 500₽ для пополнения в Wildberries! 💳"
-        };
-
-        selectedPrize = {
-          name: prizeData.name,
-          link: prizeData.link,
-          caption: prizeData.caption
-        };
-      } catch (err) {
-        console.error("Ошибка при обработке файла codes.txt:", err);
-        // В случае ошибки рекурсивно вызываем функцию для выбора другого приза
-        return await getRandomPrize(telegramId, spins);
+      if (prizesData.length > 0) {
+        selectedGroup = prizesData[0];
+      } else {
+        console.error("Ошибка: отсутствуют призовые группы.");
+        return null;
       }
-    } else if (prizeType === "group") {
-      // Приз из группы — выбираем случайный приз из выбранной группы
-      const randomPrizeIndex = Math.floor(Math.random() * groupPrizes.length);
-      const prizeName = groupPrizes[randomPrizeIndex];
+    }
 
+    const groupPrizes = selectedGroup.prizes.map(prize => prize.name);
+    const randomChance = Math.floor(Math.random() * 100) + 1;
+    let prizeTypeGroup = randomChance <= chance0 ? "0"
+                      : randomChance <= chance0 + chanceGroup2 ? "group"
+                      : "star";
+
+    let selectedPrize = { name: "0", link: null, caption: null };
+
+    if (prizeTypeGroup === "star") {
+      const group3 = ["star100", "star200", "star300"];
+      selectedPrize.name = group3[Math.floor(Math.random() * group3.length)];
+    } else if (prizeTypeGroup === "group") {
+      const prizeName = groupPrizes[Math.floor(Math.random() * groupPrizes.length)];
       const prizeData = selectedGroup.prizes.find(p => p.name === prizeName);
       if (prizeData) {
-        selectedPrize = {
-          name: prizeData.name,
-          link: prizeData.link,
-          caption: prizeData.caption
-        };
-      } else {
-        // Если приз не найден в группе, присваиваем "0"
-        selectedPrize = {
-          name: "0",
-          link: null,
-          caption: null
-        };
+        selectedPrize = { name: prizeData.name, link: prizeData.link, caption: prizeData.caption };
       }
     }
 
-    // Рассчитываем угол вращения на основе массива round
-    const firstOccurrenceIndex = round.indexOf(selectedPrize.name);
-    let degree = 0;
-    if (firstOccurrenceIndex !== -1) {
-      degree = firstOccurrenceIndex * 30 + 15;
-    } else {
-      // Если приз не найден в 'round', выбираем случайный угол
-      degree = Math.floor(Math.random() * 360);
+    let firstOccurrenceIndex = round.indexOf(selectedPrize.name);
+    if (selectedPrize.name.startsWith("star")) {
+      firstOccurrenceIndex = round.indexOf("star100");
     }
 
-    // Формируем ссылку с параметрами sub1 и sub2 refweb
-    const sub1 = user.click_id; 
+    let degree = firstOccurrenceIndex !== -1 ? firstOccurrenceIndex * 30 + 15 : 0;
+
+    const sub1 = user.click_id;
     const sub2 = telegramId;
     let prizeLink = selectedPrize.link;
-
-    if (prizeLink && prizeLink !== "none") {
+    if (!prizeLink || prizeLink === "none") {
+      prizeLink = null;
+    } else {
       prizeLink += `?sub1=${encodeURIComponent(sub1)}&sub2=${encodeURIComponent(sub2)}`;
     }
 
-    // Отправляем сообщение пользователю
-    await sendHello(telegramId, selectedPrize.name, prizeLink, selectedPrize.caption);
+    // Отправляем приз пользователю
+    // await sendHello(telegramId, selectedPrize.name, prizeLink, selectedPrize.caption);
 
-    return {
-      value: selectedPrize.name,
-      degree: degree,
-      link: prizeLink,
-    };
+    return { value: selectedPrize.name, degree, link: prizeLink };
   } catch (error) {
     console.error("Ошибка в getRandomPrize:", error);
     return null;
