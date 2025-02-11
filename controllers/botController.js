@@ -28,6 +28,8 @@ async function activateUser(user) {
 }
 
 // -- ОСНОВНАЯ ФУНКЦИЯ /start --
+// https://t.me/rollingwinbot?start=kt_111
+// https://t.me/rollingwinbot?start=ref_111
 const handleStart = async (bot, msg, match) => {
   const chatId = msg.chat.id;
   const username =
@@ -77,11 +79,10 @@ const handleStart = async (bot, msg, match) => {
       });
       await user.save();
       logger.info(`Новый пользователь создан: ${username} (ID: ${chatId})`);
-    } else if (clickId !== "none" && user.click_id === "none") {
-      // Обновляем click_id, если он ещё не был установлен
+    } else if (!user.click_id || user.click_id === "none") {
       user.click_id = clickId;
       await user.save();
-      logger.info(`Click ID обновлён для пользователя ${username} (ID: ${chatId})`);
+      logger.info(`Click ID установлен для пользователя ${username} (ID: ${chatId})`);
     }
 
     // Проверяем статус подписки

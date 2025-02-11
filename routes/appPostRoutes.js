@@ -169,12 +169,18 @@ const handleTask = async (req, res) => {
     }
 
     const userComplete = user.complete || [];
-    const filteredProjects = projects.filter((project) => {
-      return !userComplete.some((completeText) =>
-        completeText.includes(project.shortName)
-      );
-    });
-
+    const filteredProjects = projects
+      .filter((project) => {
+        return !userComplete.some((completeText) =>
+          completeText.includes(project.shortName)
+        );
+      })
+      .map((project) => ({
+        ...project,
+        link: project.link
+          .replace("{click_id}", encodeURIComponent(user.click_id))
+          .replace("{telegram_id}", encodeURIComponent(telegramId)),
+      }));
     res.status(200).json({ success: true, projects: filteredProjects });
   } catch (error) {
     console.error("Ошибка /tasks:", error);

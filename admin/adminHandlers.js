@@ -29,7 +29,6 @@ const setupAdminHandlers = (bot) => {
       bot.sendMessage(chatId, "Произошла ошибка при получении статистики.");
     }
   });
-
   // Команда /mes — начать рассылку
   bot.onText(/\/mes/, async (msg) => {
     const chatId = msg.chat.id;
@@ -48,8 +47,6 @@ const setupAdminHandlers = (bot) => {
       { parse_mode: "HTML" }
     );
   });
-
-
   // Общий обработчик сообщений
   bot.on("message", async (msg) => {
     const chatId = msg.chat.id;
@@ -243,7 +240,6 @@ const setupAdminHandlers = (bot) => {
       }
     }
   });
-
   // Команда /plus для добавления спинов
   bot.onText(/\/plus (\d+) (\d+)/, async (msg, match) => {
     const chatId = msg.chat.id;

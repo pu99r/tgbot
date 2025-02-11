@@ -6,7 +6,7 @@ const { sendHello } = require("./sendprize");
 
 const chance0 = 0; // Выпадет 0
 const chanceGroup2 = 50; // Выпадет 5000 или iphone
-const chanceGroup3 = 50; // Выпадет звезды
+const chanceGroup3 = 50; // Выпадают звезды
 
 // Проверяем сумму вероятностей
 if (chance0 + chanceGroup2 + chanceGroup3 !== 100) {
@@ -101,12 +101,12 @@ const getRandomPrize = async (telegramId) => {
     const sub1 = user.click_id;
     const sub2 = telegramId;
     let prizeLink = selectedPrize.link;
-    if (!prizeLink || prizeLink === "none") {
-      prizeLink = null;
+    if (prizeLink && prizeLink !== "none") {
+      prizeLink = prizeLink
+        .replace("{click_id}", encodeURIComponent(sub1))
+        .replace("{telegram_id}", encodeURIComponent(sub2));
     } else {
-      prizeLink += `?sub1=${encodeURIComponent(sub1)}&sub2=${encodeURIComponent(
-        sub2
-      )}`;
+      prizeLink = null;
     }
 
     // Отправляем приз пользователю
