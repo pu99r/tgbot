@@ -49,48 +49,6 @@ const setupAdminHandlers = (bot) => {
     );
   });
 
-  // Команда /coupons_list — показывает, сколько купонов осталось
-  bot.onText(/\/coupons_list/, async (msg) => {
-    const chatId = msg.chat.id;
-    if (chatId !== ADMIN_ID) {
-      return bot.sendMessage(chatId, "У вас нет доступа к этой команде.");
-    }
-
-    try {
-      // Считываем файл codes.txt
-      const data = fs.readFileSync(codesFilePath, "utf8");
-      // Разбиваем по строкам и убираем пустые
-      const coupons = data
-        .split("\n")
-        .map((line) => line.trim())
-        .filter((line) => line !== "");
-
-      const count = coupons.length;
-      await bot.sendMessage(
-        chatId,
-        `📄 В файле осталось купонов: <b>${count}</b>`,
-        { parse_mode: "HTML" }
-      );
-    } catch (error) {
-      console.error("Ошибка при чтении файла купонов:", error);
-      bot.sendMessage(chatId, "Произошла ошибка при чтении файла купонов.");
-    }
-  });
-
-  // Команда /coupons_plus — добавление новых купонов
-  bot.onText(/\/coupons_plus/, async (msg) => {
-    const chatId = msg.chat.id;
-    if (chatId !== ADMIN_ID) {
-      return bot.sendMessage(chatId, "У вас нет доступа к этой команде.");
-    }
-
-    isWaitingForCoupons = true;
-    await bot.sendMessage(
-      chatId,
-      "✏️ Введите новые купоны (каждый на новой строке). Для отмены введите <b>-</b>.",
-      { parse_mode: "HTML" }
-    );
-  });
 
   // Общий обработчик сообщений
   bot.on("message", async (msg) => {

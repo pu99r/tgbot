@@ -25,9 +25,9 @@ const UserSchema = new mongoose.Schema(
     },
     spentSpins: { type: Number, default: 0 },
     complete: { type: [String], default: [] },
-    codes: { type: [String] },
-    activated: { type: Boolean, default: false },
     offercomplete: { type: [String], default: [] },
+    balance: { type: Number, default: 0 },
+    activated: { type: Boolean, default: false },
     click_id: { type: String, default: "none" }
   },
   { timestamps: true }

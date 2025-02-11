@@ -4,9 +4,9 @@ const User = require("./models/User");
 const prizesData = require("./prizes");
 const { sendHello } = require("./sendprize");
 
-const chance0 = 50;
-const chanceGroup2 = 30;
-const chanceGroup3 = 20;
+const chance0 = 0; // Выпадет 0
+const chanceGroup2 = 50; // Выпадет 5000 или iphone
+const chanceGroup3 = 50; // Выпадет звезды
 
 // Проверяем сумму вероятностей
 if (chance0 + chanceGroup2 + chanceGroup3 !== 100) {
@@ -14,9 +14,18 @@ if (chance0 + chanceGroup2 + chanceGroup3 !== 100) {
 }
 
 const round = [
-  "iphone", "0", "10.000", "5.000", "0",
-  "star100", "30.000", "0", "star200",
-  "5.000", "0", "star300",
+  "iphone",
+  "0",
+  "10.000",
+  "5.000",
+  "0",
+  "star100",
+  "30.000",
+  "0",
+  "star200",
+  "5.000",
+  "0",
+  "star300",
 ];
 
 const getRandomPrize = async (telegramId) => {
@@ -28,7 +37,9 @@ const getRandomPrize = async (telegramId) => {
     }
     const completedGroups = user.offercomplete || [];
 
-    let selectedGroup = prizesData.find(group => !completedGroups.includes(group.group));
+    let selectedGroup = prizesData.find(
+      (group) => !completedGroups.includes(group.group)
+    );
 
     if (!selectedGroup) {
       if (prizesData.length > 0) {
@@ -39,22 +50,46 @@ const getRandomPrize = async (telegramId) => {
       }
     }
 
-    const groupPrizes = selectedGroup.prizes.map(prize => prize.name);
+    const groupPrizes = selectedGroup.prizes.map((prize) => prize.name);
     const randomChance = Math.floor(Math.random() * 100) + 1;
-    let prizeTypeGroup = randomChance <= chance0 ? "0"
-                      : randomChance <= chance0 + chanceGroup2 ? "group"
-                      : "star";
+    let prizeTypeGroup =
+      randomChance <= chance0
+        ? "0"
+        : randomChance <= chance0 + chanceGroup2
+        ? "group"
+        : "star";
 
     let selectedPrize = { name: "0", link: null, caption: null };
 
     if (prizeTypeGroup === "star") {
       const group3 = ["star100", "star200", "star300"];
       selectedPrize.name = group3[Math.floor(Math.random() * group3.length)];
+      let balanceToAdd = 0;
+      switch (selectedPrize.name) {
+        case "star100":
+          balanceToAdd = 100;
+          break;
+        case "star200":
+          balanceToAdd = 200;
+          break;
+        case "star300":
+          balanceToAdd = 300;
+          break;
+      }
+      if (balanceToAdd > 0) {
+        user.balance += balanceToAdd;
+        await user.save();
+      }
     } else if (prizeTypeGroup === "group") {
-      const prizeName = groupPrizes[Math.floor(Math.random() * groupPrizes.length)];
-      const prizeData = selectedGroup.prizes.find(p => p.name === prizeName);
+      const prizeName =
+        groupPrizes[Math.floor(Math.random() * groupPrizes.length)];
+      const prizeData = selectedGroup.prizes.find((p) => p.name === prizeName);
       if (prizeData) {
-        selectedPrize = { name: prizeData.name, link: prizeData.link, caption: prizeData.caption };
+        selectedPrize = {
+          name: prizeData.name,
+          link: prizeData.link,
+          caption: prizeData.caption,
+        };
       }
     }
 
@@ -63,7 +98,8 @@ const getRandomPrize = async (telegramId) => {
       firstOccurrenceIndex = round.indexOf("star100");
     }
 
-    let degree = firstOccurrenceIndex !== -1 ? firstOccurrenceIndex * 30 + 15 : 0;
+    let degree =
+      firstOccurrenceIndex !== -1 ? firstOccurrenceIndex * 30 + 15 : 0;
 
     const sub1 = user.click_id;
     const sub2 = telegramId;
@@ -71,7 +107,9 @@ const getRandomPrize = async (telegramId) => {
     if (!prizeLink || prizeLink === "none") {
       prizeLink = null;
     } else {
-      prizeLink += `?sub1=${encodeURIComponent(sub1)}&sub2=${encodeURIComponent(sub2)}`;
+      prizeLink += `?sub1=${encodeURIComponent(sub1)}&sub2=${encodeURIComponent(
+        sub2
+      )}`;
     }
 
     // Отправляем приз пользователю
