@@ -257,8 +257,8 @@ const sendMainFunctionalityMessage = async (
 • Спины: <b>${user.spins || 0}</b>
 • Дата реги: <b>${user.registrationDate || 0}</b>
 • Спинов откручено: <b>${user.spentSpins || 0}</b>
-• Мейн офферы: <b>${user.complete || 0}</b>
-• Задания: <b>${user.offercomplete || 0}</b>
+• Задания: <b>${user.complete || 0}</b>
+• Мэйн офферы: <b>${user.offercomplete || 0}</b>
 • Баланс: <b>${user.balance || 0}</b>
 • Активировал подписку: <b>${user.activated || 0}</b>
 • click_id: <b>${user.click_id || 0}</b>

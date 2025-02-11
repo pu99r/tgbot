@@ -94,9 +94,6 @@ const getRandomPrize = async (telegramId) => {
     }
 
     let firstOccurrenceIndex = round.indexOf(selectedPrize.name);
-    if (selectedPrize.name.startsWith("star")) {
-      firstOccurrenceIndex = round.indexOf("star100");
-    }
 
     let degree =
       firstOccurrenceIndex !== -1 ? firstOccurrenceIndex * 30 + 15 : 0;
