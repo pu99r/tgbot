@@ -183,16 +183,16 @@ const handleTask = async (req, res) => {
       .json({ success: false, message: "Внутренняя ошибка сервера." });
   }
 };
-//Добавялет задачу user.complete https://bestx.cam/update-complete/?telegramid=1370034279&shortname=name
+//Добавялет задачу или группу user.complete https://bestx.cam/update-complete/?telegramid=1370034279&shortname=name&group=group1
 const updateComplete = async (req, res) => {
   try {
-    const { telegramid, shortname } = req.query;
+    const { telegramid, shortname, group } = req.query;
 
-    // Проверяем, что переданы оба параметра
-    if (!telegramid || !shortname) {
+    // Проверяем, что переданы обязательные параметры
+    if (!telegramid) {
       return res
         .status(400)
-        .json({ success: false, message: "Не переданы telegramid или shortname" });
+        .json({ success: false, message: "Не переданы telegramid" });
     }
 
     // Ищем пользователя по Telegram ID
@@ -201,6 +201,24 @@ const updateComplete = async (req, res) => {
       return res
         .status(404)
         .json({ success: false, message: "Пользователь не найден." });
+    }
+
+    // Если group передан и НЕ равен "0", добавляем в offercomplete
+    if (group && group !== "0") {
+      if (!user.offercomplete.includes(group)) {
+        user.offercomplete.push(group);
+        await user.save();
+        return res.json({
+          success: true,
+          message: `Группа "${group}" успешно добавлена в offercomplete.`,
+          offercomplete: user.offercomplete,
+        });
+      } else {
+        return res.json({
+          success: false,
+          message: `Группа "${group}" уже добавлена в offercomplete.`,
+        });
+      }
     }
 
     // Проверяем, существует ли shortname в списке задач
