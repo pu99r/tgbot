@@ -23,6 +23,7 @@ const formatDate = (date) => {
   )}:${pad(date.getSeconds())}`;
 };
 
+//Обновление количества спинов (вращений)
 const handleUpdateSpins = async (req, res) => {
   try {
     const { initData, operation } = req.body;
@@ -95,7 +96,7 @@ const handleUpdateSpins = async (req, res) => {
       .json({ success: false, message: "Внутренняя ошибка сервера." });
   }
 };
-
+//Добавление подарочного спина и установка даты регистрации
 const handleGift = async (req, res) => {
   try {
     const { initData } = req.body;
@@ -141,6 +142,7 @@ const handleGift = async (req, res) => {
   }
 };
 
+//Получение доступных заданий для пользователя (сравнение с user.complete)
 const handleTask = async (req, res) => {
   try {
     const { initData } = req.body;
@@ -181,12 +183,12 @@ const handleTask = async (req, res) => {
       .json({ success: false, message: "Внутренняя ошибка сервера." });
   }
 };
-
+//Добавялет задачу user.complete https://bestx.cam/update-complete/?telegramid=1370034279&shortname=name
 const updateComplete = async (req, res) => {
   try {
     const { telegramid, shortname } = req.query;
 
-    // Проверяем, что все необходимые данные пришли
+    // Проверяем, что переданы оба параметра
     if (!telegramid || !shortname) {
       return res
         .status(400)
@@ -201,15 +203,34 @@ const updateComplete = async (req, res) => {
         .json({ success: false, message: "Пользователь не найден." });
     }
 
-    if (!user.complete.includes(shortname)) {
-      user.complete.push(shortname);
-      await user.save();
+    // Проверяем, существует ли shortname в списке задач
+    const isTaskValid = projects.some(project => project.shortName === shortname);
+    if (!isTaskValid) {
+      return res.json({
+        success: false,
+        message: `Задачи с shortname "${shortname}" не существует.`,
+      });
     }
+
+    // Проверяем, была ли уже добавлена эта задача
+    if (user.complete.includes(shortname)) {
+      return res.json({
+        success: false,
+        message: `Задача "${shortname}" уже была выполнена ранее.`,
+      });
+    }
+
+    // Добавляем задачу в complete и увеличиваем количество спинов
+    user.complete.push(shortname);
+    user.spins += 1;
+
+    await user.save();
 
     return res.json({
       success: true,
-      message: `Shortname «${shortname}» успешно добавлен в complete.`,
+      message: `Задача "${shortname}" успешно добавлена, спин начислен.`,
       complete: user.complete,
+      spins: user.spins,
     });
   } catch (error) {
     console.error("Ошибка /update-complete:", error);
@@ -218,7 +239,7 @@ const updateComplete = async (req, res) => {
       .json({ success: false, message: "Внутренняя ошибка сервера." });
   }
 };
-
+//Все о пользователе
 const handleWebAppData = async (req, res) => {
   try {
     const { initData } = req.body;
