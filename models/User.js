@@ -10,8 +10,8 @@ const formatDate = (date) => {
 
 const UserSchema = new mongoose.Schema(
   {
-    telegramId: { type: Number, unique: true, required: true },
-    username: { type: String, required: true },
+    telegramId: { type: Number, unique: true, required: true }, // айди пользователя
+    username: { type: String, required: true }, // ник в телеграме
     referrals: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     referredBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -28,7 +28,10 @@ const UserSchema = new mongoose.Schema(
     offercomplete: { type: [String], default: [] },
     balance: { type: Number, default: 0 },
     activated: { type: Boolean, default: false },
-    click_id: { type: String, default: "none" }
+    click_id: { type: String, default: "none" },
+    s1: { type: String, default: null },
+    s2: { type: String, default: null },
+    s3: { type: String, default: null }
   },
   { timestamps: true }
 );

@@ -299,9 +299,9 @@ const handleWebAppData = async (req, res) => {
       referralsCount,
       spins: user.spins,
       registrationDate: user.registrationDate,
+      balance: user.balance,
+      referralList: allReferrals, 
       spentSpins: user.spentSpins,
-      codes: user.codes,
-      referralList: allReferrals, // Добавляем массив username рефералов
     });
   } catch (error) {
     console.error("Ошибка /webapp-data:", error);
