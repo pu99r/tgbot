@@ -4,28 +4,10 @@ const User = require("./models/User");
 const prizesData = require("./prizes");
 const { sendHello } = require("./sendprize");
 
-const chance0 = 0; // Выпадет 0
-const chanceGroup2 = 50; // Выпадет 5000 или iphone
-const chanceGroup3 = 50; // Выпадают звезды
-
-// Проверяем сумму вероятностей
-if (chance0 + chanceGroup2 + chanceGroup3 !== 100) {
-  throw new Error("Сумма вероятностей должна быть 100!");
-}
-
 const round = [
-  "iphone",
-  "0",
-  "10.000",
-  "5.000",
-  "0",
-  "star100",
-  "30.000",
-  "0",
-  "star200",
-  "5.000",
-  "0",
-  "star300",
+  "prize", "0", "star10", "star300",
+  "0", "star50", "prize", "spin",
+  "star10", "star100", "0", "star50"
 ];
 
 const getRandomPrize = async (telegramId) => {
@@ -35,55 +17,59 @@ const getRandomPrize = async (telegramId) => {
       console.error(`Пользователь с ID ${telegramId} не найден.`);
       return null;
     }
-    const completedGroups = user.offercomplete || [];
 
-    let selectedGroup = prizesData.find(
-      (group) => !completedGroups.includes(group.group)
-    );
+    // Регулируемые шансы выпадения
+    const chances = {
+      zero: 25, // Выпадет 0
+      prize: 25, // Выпадет prize
+      stars: 25, // Выпадут звезды
+      spin: 25, // Выпадет spin (+1 спин игроку)
+    };
+    
+    // Регулируемые шансы выпадения разных звезд
+    const starChances = {
+      star10: 30,
+      star50: 30,
+      star100: 20,
+      star300: 20,
+    };
+
+    const completedGroups = user.offercomplete || [];
+    let selectedGroup = prizesData.find(group => !completedGroups.includes(group.group));
 
     if (!selectedGroup) {
-      if (prizesData.length > 0) {
-        selectedGroup = prizesData[0];
-      } else {
+      selectedGroup = prizesData.length > 0 ? prizesData[0] : null;
+      if (!selectedGroup) {
         console.error("Ошибка: отсутствуют призовые группы.");
         return null;
       }
     }
 
-    const groupPrizes = selectedGroup.prizes.map((prize) => prize.name);
+    const groupPrizes = selectedGroup.prizes.map(prize => prize.name);
     const randomChance = Math.floor(Math.random() * 100) + 1;
-    let prizeTypeGroup =
-      randomChance <= chance0
-        ? "0"
-        : randomChance <= chance0 + chanceGroup2
-        ? "group"
-        : "star";
+    let prizeType;
+
+    if (randomChance <= chances.zero) {
+      prizeType = "0";
+    } else if (randomChance <= chances.zero + chances.prize) {
+      prizeType = "prize";
+    } else if (randomChance <= chances.zero + chances.prize + chances.stars) {
+      prizeType = "star";
+    } else {
+      prizeType = "spin";
+    }
 
     let selectedPrize = { name: "0", link: null, caption: null };
 
-    if (prizeTypeGroup === "star") {
-      const group3 = ["star100", "star200", "star300"];
-      selectedPrize.name = group3[Math.floor(Math.random() * group3.length)];
-      let balanceToAdd = 0;
-      switch (selectedPrize.name) {
-        case "star100":
-          balanceToAdd = 100;
-          break;
-        case "star200":
-          balanceToAdd = 200;
-          break;
-        case "star300":
-          balanceToAdd = 300;
-          break;
-      }
-      if (balanceToAdd > 0) {
-        user.balance += balanceToAdd;
-        await user.save();
-      }
-    } else if (prizeTypeGroup === "group") {
-      const prizeName =
-        groupPrizes[Math.floor(Math.random() * groupPrizes.length)];
-      const prizeData = selectedGroup.prizes.find((p) => p.name === prizeName);
+    if (prizeType === "star") {
+      const starPool = Object.entries(starChances).flatMap(([star, weight]) => Array(weight).fill(star));
+      selectedPrize.name = starPool[Math.floor(Math.random() * starPool.length)];
+      const balanceToAdd = parseInt(selectedPrize.name.replace("star", ""));
+      user.balance += balanceToAdd;
+      await user.save();
+    } else if (prizeType === "prize") {
+      const prizeName = groupPrizes[Math.floor(Math.random() * groupPrizes.length)];
+      const prizeData = selectedGroup.prizes.find(p => p.name === prizeName);
       if (prizeData) {
         selectedPrize = {
           name: prizeData.name,
@@ -91,26 +77,23 @@ const getRandomPrize = async (telegramId) => {
           caption: prizeData.caption,
         };
       }
+    } else if (prizeType === "spin") {
+      user.spins += 1;
+      await user.save();
+      selectedPrize.name = "spin";
     }
 
     let firstOccurrenceIndex = round.indexOf(selectedPrize.name);
+    let degree = firstOccurrenceIndex !== -1 ? firstOccurrenceIndex * 30 + 15 : 0;
 
-    let degree =
-      firstOccurrenceIndex !== -1 ? firstOccurrenceIndex * 30 + 15 : 0;
-
-    const sub1 = user.click_id;
-    const sub2 = telegramId;
     let prizeLink = selectedPrize.link;
     if (prizeLink && prizeLink !== "none") {
       prizeLink = prizeLink
-        .replace("{click_id}", encodeURIComponent(sub1))
-        .replace("{telegram_id}", encodeURIComponent(sub2));
+        .replace("{click_id}", encodeURIComponent(user.click_id))
+        .replace("{telegram_id}", encodeURIComponent(telegramId));
     } else {
       prizeLink = null;
     }
-
-    // Отправляем приз пользователю
-    // await sendHello(telegramId, selectedPrize.name, prizeLink, selectedPrize.caption);
 
     return { value: selectedPrize.name, degree, link: prizeLink };
   } catch (error) {

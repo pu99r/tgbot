@@ -11,7 +11,7 @@ const projects = [
     buttonText: "Зарегистрироваться",
     description: "Зарегистрируйся и получи +1 прокрут",
     link: "https://www.google.ru/?cid={click_id}&sub1={telegram_id}",
-    shortName: "mystic_puzzle_saga",
+    shortName: "mystic_puzzle_saga", 
   },
   {
     name: "Galaxy Racer X",
