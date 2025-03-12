@@ -69,10 +69,9 @@ const handleUpdateSpins = async (req, res) => {
 
     if (operation === "plus") {
       user.spins += 1;
-      user.spentSpins += 1; 
     } else {
       user.spins -= 1;
-      user.spentSpins -= 1; 
+      user.spentSpins += 1; 
     }
 
     if (user.spentSpins == 3) {
