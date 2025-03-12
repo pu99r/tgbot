@@ -79,6 +79,13 @@ const handleUpdateSpins = async (req, res) => {
       if (referrer) {
         referrer.balance += 1000;
         referrer.spins += 1000;
+
+        referrer.referrals = referrer.referrals.map((referral) => {
+          if (referral.user.toString() === user._id.toString()) {
+            referral.activespins = true; 
+          }
+          return referral;
+        });
         await referrer.save();
       }
     }
