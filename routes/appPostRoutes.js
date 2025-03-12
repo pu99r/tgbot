@@ -51,6 +51,7 @@ const handleUpdateSpins = async (req, res) => {
 
     const telegramId = userObj.id;
     const user = await User.findOne({ telegramId });
+    let actualspins = user.spentSpins
     
     if (!user) {
       return res
@@ -72,20 +73,20 @@ const handleUpdateSpins = async (req, res) => {
     } else {
       if (user.spins > 0) {
         user.spentSpins += 1; 
+        actualspins += 1
       }
       user.spins = Math.max(user.spins - 1, 0);
     }
 
     await user.save();
-
-    if (user.spentSpins == 3) {
+    if (actualspins == 3) {
       if (user.referredBy) {
         const referrer = await User.findById(user.referredBy);
 
         if (referrer) {
           // Увеличиваем баланс и спины пригласившего
-          referrer.balance += 10;
-          referrer.spins += 1;
+          referrer.balance += 1000;
+          referrer.spins += 1000;
 
           // Обновляем массив referrals и устанавливаем activespins для текущего реферала
           referrer.referrals = referrer.referrals.map((referral) => {
