@@ -96,6 +96,7 @@ const handleUpdateSpins = async (req, res) => {
       .json({ success: false, message: "Внутренняя ошибка сервера." });
   }
 };
+
 //Добавление подарочного спина и установка даты регистрации
 const handleGift = async (req, res) => {
   try {
@@ -189,6 +190,7 @@ const handleTask = async (req, res) => {
       .json({ success: false, message: "Внутренняя ошибка сервера." });
   }
 };
+
 //Добавялет задачу или группу user.complete https://bestx.cam/update-complete/?telegramid=1370034279&shortname=name&group=group1
 const updateComplete = async (req, res) => {
   try {
@@ -263,6 +265,7 @@ const updateComplete = async (req, res) => {
       .json({ success: false, message: "Внутренняя ошибка сервера." });
   }
 };
+
 //Все о пользователе
 const handleWebAppData = async (req, res) => {
   try {
@@ -288,15 +291,16 @@ const handleWebAppData = async (req, res) => {
         .json({ success: false, message: "Пользователь не найден." });
     }
 
-    const referralsCount = user.referrals.length;
     const userReferralCode = `ref_${user.telegramId}`;
-    const allReferrals = user.referrals.map((ref) => ref.username); // Извлекаем только username рефералов
+    const allReferrals = user.referrals.map((ref) => ({
+      username: ref.username,
+      activespins: ref.activespins,
+    }));
 
     res.send({
       success: true,
       referralCode: userReferralCode,
       botUsername: process.env.BOT_USERNAME,
-      referralsCount,
       spins: user.spins,
       registrationDate: user.registrationDate,
       balance: user.balance,

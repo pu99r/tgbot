@@ -104,8 +104,3 @@ const getRandomPrize = async (telegramId) => {
 };
 
 module.exports = getRandomPrize;
-
-
-getRandomPrize("1370034279")
-  .then(result => console.log("Результат:", result))
-  .catch(error => console.error("Ошибка:", error));

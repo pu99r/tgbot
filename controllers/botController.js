@@ -73,16 +73,20 @@ const handleStart = async (bot, msg, match) => {
         telegramId: chatId,
         username,
         referredBy,
-        spins: 0, // без спинов — выдадим позже после проверки подписки
-        activated: false, // специальный флаг, чтобы не выдавать спины повторно
-        click_id: clickId, // Сохраняем click_id
+        spins: 0,
+        activated: false,
+        click_id: clickId,
       });
       await user.save();
       logger.info(`Новый пользователь создан: ${username} (ID: ${chatId})`);
-    } else if (!user.click_id || user.click_id === "none") {
-      user.click_id = clickId;
-      await user.save();
-      logger.info(`Click ID установлен для пользователя ${username} (ID: ${chatId})`);
+
+      // Если есть реферер, добавляем ссылку на пользователя в его referrals и устанавливаем activespins: false
+      if (referredBy) {
+        await User.findByIdAndUpdate(referredBy, {
+          $push: { referrals: { user: user._id, activespins: false } },
+        });
+        logger.info(`Пользователь ${username} добавлен в рефералы с activespins: false`);
+      }
     }
 
     // Проверяем статус подписки
@@ -97,11 +101,9 @@ const handleStart = async (bot, msg, match) => {
     }
 
     if (["member", "administrator", "creator"].includes(memberStatus)) {
-      // Пользователь уже подписан, активируем (если не активирован) и отправляем основное меню
       await activateUser(user);
       await sendMainFunctionalityMessage(bot, chatId, user);
     } else {
-      // Пользователь не подписан — просим подписаться
       await sendSubscriptionPrompt(bot, chatId);
     }
   } catch (error) {
@@ -244,7 +246,6 @@ const sendMainFunctionalityMessage = async (
       text: "Отзывы",
       url: process.env.OTZOVCHANNEL,
     };
-
     const message = `
 🎉 <b>Добро пожаловать, ${user.username}!</b>
 
