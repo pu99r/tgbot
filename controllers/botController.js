@@ -236,7 +236,6 @@ const sendMainFunctionalityMessage = async (
 
     let referralsStatus = "Нет рефералов";
     if (user.referrals && user.referrals.length > 0) {
-      // Получаем никнеймы рефералов и их статусы activespins
       const referralDetails = await Promise.all(
         user.referrals.map(async (referral) => {
           const referrerUser = await User.findById(referral.user);
@@ -249,7 +248,6 @@ const sendMainFunctionalityMessage = async (
         })
       );
 
-      // Фильтруем null значения (если реферера нет)
       referralsStatus = referralDetails.filter(Boolean).join("\n");
     }
 

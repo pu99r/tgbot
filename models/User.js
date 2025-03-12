@@ -16,7 +16,7 @@ const UserSchema = new mongoose.Schema(
       {
         user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         activespins: { type: Boolean, default: false },
-      },
+      },в
     ],
     referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     spins: { type: Number, default: 0 },

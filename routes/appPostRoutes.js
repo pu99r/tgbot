@@ -79,21 +79,6 @@ const handleUpdateSpins = async (req, res) => {
       if (referrer) {
         referrer.balance += 1000;
         referrer.spins += 1000;
-
-        await referrer.populate({
-          path: 'referrals.user',
-          select: 'telegramId'  // Получаем только telegramId
-        });
-        
-        // Обновляем activespins у нужного реферала
-        referrer.referrals = referrer.referrals.map((referral) => {
-          // Проверяем, совпадает ли telegramId пользователя с telegramId реферала
-          if (referral.user && referral.user.telegramId.toString() === user.telegramId.toString()) {
-            referral.activespins = true; // Устанавливаем activespins в true
-          }
-          return referral;
-        });
-        
         await referrer.save();
       }
     }
@@ -317,10 +302,19 @@ const handleWebAppData = async (req, res) => {
     }
 
     const userReferralCode = `ref_${user.telegramId}`;
-    const allReferrals = user.referrals.map((ref) => ({
-      username: "хуй",
-      activespins: ref.activespins,
-    }));
+
+    const allReferrals = await Promise.all(
+      user.referrals.map(async (referral) => {
+        const referrerUser = await User.findById(referral.user);
+        if (referrerUser) {
+          return {
+            username: referrerUser.username,
+            status: referral.activespins
+          };
+        }
+        return null;
+      })
+    );
 
     res.send({
       success: true,
