@@ -93,7 +93,7 @@ const handleUpdateSpins = async (req, res) => {
       success: true,
       spins: user.spins,
       spentSpins: user.spentSpins,
-      balance: user.balancte,
+      balance: user.balance,
       prize: prize,
       message: `Spins успешно ${
         operation === "plus" ? "увеличены" : "уменьшены"
@@ -312,7 +312,6 @@ const handleWebAppData = async (req, res) => {
             status: referral.activespins
           };
         }
-        return null;
       })
     );
 

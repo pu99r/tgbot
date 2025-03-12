@@ -15,7 +15,7 @@ async function activateUser(user) {
     if (user.referredBy) {
       await User.findByIdAndUpdate(user.referredBy, {
         $push: { referrals: user._id },
-        $inc: { spins: 1 },
+
       });
       logger.info(
         `Пользователь ${user.username} активирован, рефереру добавлен 1 спин`
