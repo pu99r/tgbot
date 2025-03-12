@@ -80,12 +80,18 @@ const handleUpdateSpins = async (req, res) => {
         referrer.balance += 1000;
         referrer.spins += 1000;
 
+        await referrer.populate({
+          path: 'referrals.user',
+          select: 'telegramId'  // Получаем только telegramId
+        });
+        
         referrer.referrals = referrer.referrals.map((referral) => {
-          if (referral.user.toString() === user._id.toString()) {
+          if (referral.user.telegramId === user.telegramId) { 
             referral.activespins = true; 
           }
           return referral;
         });
+        
         await referrer.save();
       }
     }
