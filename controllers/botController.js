@@ -234,6 +234,26 @@ const sendMainFunctionalityMessage = async (
     user.spins = user.spins || 0;
     await user.save();
 
+    let referralsStatus = "Нет рефералов";
+    if (user.referrals && user.referrals.length > 0) {
+      // Получаем никнеймы рефералов и их статусы activespins
+      const referralDetails = await Promise.all(
+        user.referrals.map(async (referral) => {
+          const referrerUser = await User.findById(referral.user);
+          if (referrerUser) {
+            return `<b>${referrerUser.username}</b> — <i>${
+              referral.activespins ? "Активирован" : "Не активирован"
+            }</i>`;
+          }
+          return null;
+        })
+      );
+
+      // Фильтруем null значения (если реферера нет)
+      referralsStatus = referralDetails.filter(Boolean).join("\n");
+    }
+
+
     const webAppButton = {
       text: "Открыть приложение",
       web_app: { url: process.env.WEB_APP_URL },
@@ -257,13 +277,17 @@ const sendMainFunctionalityMessage = async (
 <a href="${referralLink || "#"}">${referralLink || "Реферальная ссылка"}</a>  
 • Приглашено друзей: <b>${referralsCount || 0}</b>
 • Спины: <b>${user.spins || 0}</b>
-• Дата реги: <b>${user.registrationDate || 0}</b>
 • Спинов откручено: <b>${user.spentSpins || 0}</b>
+• Дата реги: <b>${user.registrationDate || 0}</b>
 • Задания: <b>${user.complete || 0}</b>
 • Мэйн офферы: <b>${user.offercomplete || 0}</b>
 • Баланс: <b>${user.balance || 0}</b>
-• Активировал подписку: <b>${user.activated || 0}</b>
+• Активировал подписку на канал: <b>${user.activated || 0}</b>
 • click_id: <b>${user.click_id || 0}</b>
+
+<b>Список ваших рефералов и их статусы:</b>
+${referralsStatus}
+
 🔥 Подарочные купоны ждут вас прямо сейчас! Начните игру и станьте одним из победителей! 🍀
 `;
 
