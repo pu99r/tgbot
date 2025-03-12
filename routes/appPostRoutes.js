@@ -75,7 +75,11 @@ const handleUpdateSpins = async (req, res) => {
     }
 
     if (user.spentSpins == 3) {
-      user.balance += 1000
+      const referrer = await User.findById(user.referredBy);
+      if (referrer) {
+        referrer.balance += 1000;
+        referrer.spins += 1000;
+        await referrer.save();
     }
     await user.save();
 
