@@ -294,7 +294,7 @@ const handleWebAppData = async (req, res) => {
 
     const userReferralCode = `ref_${user.telegramId}`;
     const allReferrals = user.referrals.map((ref) => ({
-      username: ref.user.username,
+      username: "хуй",
       activespins: ref.activespins,
     }));
     
