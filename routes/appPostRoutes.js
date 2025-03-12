@@ -80,6 +80,7 @@ const handleUpdateSpins = async (req, res) => {
         referrer.balance += 1000;
         referrer.spins += 1000;
         await referrer.save();
+      }
     }
     await user.save();
 
