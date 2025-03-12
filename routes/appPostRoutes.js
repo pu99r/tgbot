@@ -78,27 +78,6 @@ const handleUpdateSpins = async (req, res) => {
     }
 
     await user.save();
-    if (user.referredBy) {
-      const referrer = await User.findById(user.referredBy);
-
-      if (referrer) {
-        // Увеличиваем баланс и спины пригласившего
-        referrer.balance += 1000;
-        referrer.spins += 1000;
-
-        // Обновляем массив referrals и устанавливаем activespins для текущего реферала
-        referrer.referrals = referrer.referrals.map((referral) => {
-          if (referral.user.toString() === user._id.toString()) {
-            referral.activespins = true; // Изменяем activespins на true для текущего реферала
-          }
-          return referral;
-        });
-
-        // Сохраняем изменения для пригласившего
-        await referrer.save();
-      }
-    }
-
     const spins = user.spentSpins
     const prize = await getRandomPrize(telegramId, spins);
 
@@ -315,9 +294,10 @@ const handleWebAppData = async (req, res) => {
 
     const userReferralCode = `ref_${user.telegramId}`;
     const allReferrals = user.referrals.map((ref) => ({
-      username: ref.username,
+      username: ref.user.username,
       activespins: ref.activespins,
     }));
+    
 
     res.send({
       success: true,
