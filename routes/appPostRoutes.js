@@ -85,9 +85,11 @@ const handleUpdateSpins = async (req, res) => {
           select: 'telegramId'  // Получаем только telegramId
         });
         
+        // Обновляем activespins у нужного реферала
         referrer.referrals = referrer.referrals.map((referral) => {
-          if (referral.user.telegramId === user.telegramId) { 
-            referral.activespins = true; 
+          // Проверяем, совпадает ли telegramId пользователя с telegramId реферала
+          if (referral.user && referral.user.telegramId.toString() === user.telegramId.toString()) {
+            referral.activespins = true; // Устанавливаем activespins в true
           }
           return referral;
         });
@@ -106,6 +108,7 @@ const handleUpdateSpins = async (req, res) => {
       success: true,
       spins: user.spins,
       spentSpins: user.spentSpins,
+      balance: user.balancte,
       prize: prize,
       message: `Spins успешно ${
         operation === "plus" ? "увеличены" : "уменьшены"
