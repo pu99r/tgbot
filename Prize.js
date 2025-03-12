@@ -11,6 +11,7 @@ const round = [
 ];
 
 const getRandomPrize = async (telegramId) => {
+
   try {
     const user = await User.findOne({ telegramId });
     if (!user) {
@@ -84,7 +85,7 @@ const getRandomPrize = async (telegramId) => {
     }
 
     let firstOccurrenceIndex = round.indexOf(selectedPrize.name);
-    let degree = firstOccurrenceIndex !== -1 ? firstOccurrenceIndex * 30 + 15 : 0;
+    let degree = firstOccurrenceIndex !== -1 ? 360 - (firstOccurrenceIndex * 30) : 0;
 
     let prizeLink = selectedPrize.link;
     if (prizeLink && prizeLink !== "none") {
@@ -103,3 +104,8 @@ const getRandomPrize = async (telegramId) => {
 };
 
 module.exports = getRandomPrize;
+
+
+getRandomPrize("1370034279")
+  .then(result => console.log("Результат:", result))
+  .catch(error => console.error("Ошибка:", error));
