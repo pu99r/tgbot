@@ -39,8 +39,9 @@ const setupAdminHandlers = (bot) => {
     isWaitingForMessage = true;
     await bot.sendMessage(
       chatId,
-      "✉️ Введите сообщение для рассылки всем пользователям. " +
-        "Вы можете добавить кнопку с ссылкой, указав:\n" +
+      "✉️ Введите сообщение для рассылки всем пользователям.\n" +
+      "&lt;a href=\"google.com\"&gt;link&lt;/a&gt;\n\n" +
+        "Кнопки:\n" +
         "`LinkTitle=ТекстКнопки`\n" +
         "`LinkUrl=https://...`\n\n" +
         "Для отмены введите <b>-</b>.",
