@@ -29,10 +29,10 @@ const getRandomPrize = async (telegramId, spins) => {
 
     // Регулируемые шансы выпадения %
     const chances = {
-      zero: 25,
-      prize: 25,
-      stars: 25,
-      spin: 25,
+      zero: 0,
+      prize: 100,
+      stars: 0,
+      spin: 0,
     };
 
     // Регулируемые шансы выпадения разных звезд %
@@ -56,17 +56,62 @@ const getRandomPrize = async (telegramId, spins) => {
       prizeType = "spin";
     }
 
-    // инициализация приза
+    // Инициализация приза
     let selectedPrize = { name: "0", link: null, caption: null };
-
-    //случайная группа и приз в ней
-    const randomIndex = Math.floor(Math.random() * prizesData.length);
-    selectedGroup = prizesData[randomIndex];
-    const groupPrizes = selectedGroup.prizes.map((prize) => prize.name);
-    console.log(selectedGroup);
-
-    //Действия для кажого типа
     let prizeLink = null;
+
+
+    // Для отладки, если когда-то захотим жёстко указать группу/приз:
+    let groupname = "gamesport1";      // пример: хотим искать приз в группе "gamesport1"
+    let nameingroupname = "iphone";    // пример: хотим найти приз "iphone" в этой группе
+    
+    if (prizeType === "prize") {
+      let finalPrizeData = null;
+      if (groupname && nameingroupname) {
+        const foundGroup = prizesData.find((g) => g.group === groupname);
+        if (foundGroup) {
+          // Ищем приз по имени внутри найденной группы
+          const foundPrize = foundGroup.prizes.find(
+            (p) => p.name === nameingroupname
+          );
+          if (foundPrize) {
+            finalPrizeData = foundPrize; // Если всё совпало, сохраняем
+          }
+        }
+      }
+      if (!finalPrizeData) {
+        const randomGroupIndex = Math.floor(Math.random() * prizesData.length);
+        const randomGroup = prizesData[randomGroupIndex];
+        const randomPrizeIndex = Math.floor(Math.random() * randomGroup.prizes.length);
+        finalPrizeData = randomGroup.prizes[randomPrizeIndex];
+      }
+
+      console.log(finalPrizeData)
+      // ===========================================
+      // 3. Теперь finalPrizeData точно есть
+      // Подставляем параметры в ссылку
+      // ===========================================
+      if (finalPrizeData) {
+        const replacedLink = finalPrizeData.link
+          .replace("{click_id}", encodeURIComponent(user.click_id))
+          .replace("{telegram_id}", encodeURIComponent(user.telegramId));
+
+        selectedPrize = {
+          name: finalPrizeData.name,
+          link: replacedLink,
+          caption: finalPrizeData.caption,
+        };
+
+        // Отправляем уведомление
+        await sendHello(
+          user.telegramId,
+          selectedPrize.name,
+          selectedPrize.link,
+          selectedPrize.caption
+        );
+      }
+    }
+
     if (prizeType === "star") {
       const starPool = Object.entries(starChances).flatMap(([star, weight]) =>
         Array(weight).fill(star)
@@ -77,44 +122,19 @@ const getRandomPrize = async (telegramId, spins) => {
       user.balance += balanceToAdd;
       await user.save();
     }
-    if (prizeType === "prize") {
-      // Сначала выбираем случайное имя приза
-      const prizeName = groupPrizes[Math.floor(Math.random() * groupPrizes.length)];
-      // Находим объект приза с таким именем в текущей группе
-      const prizeData = selectedGroup.prizes.find((p) => p.name === prizeName);
-    
-      // Если приз нашёлся
-      if (prizeData) {
-        // Делаем подстановку
-        const prizeLink = prizeData.link
-          .replace("{click_id}", encodeURIComponent(user.click_id))
-          .replace("{telegram_id}", encodeURIComponent(telegramId));
-    
-        // Обновляем selectedPrize, чтобы вернуть корректные данные
-        selectedPrize = {
-          name: prizeData.name,
-          link: prizeLink,
-          caption: prizeData.caption,
-        };
-    
-        // Отправляем сообщение с призом
-        await sendHello(
-          telegramId,
-          selectedPrize.name,
-          selectedPrize.link,
-          selectedPrize.caption
-        );
-      }
-    }
+
     if (prizeType === "spin") {
       user.spins += 1;
       await user.save();
       selectedPrize.name = "spin";
     }
+    console.log(prizeLink);
+    console.log(prizemygroup, prizemyname);
 
     //Расчет угла и отправка
     let Index0 = round.indexOf(selectedPrize.name);
     let degree = Index0 !== -1 ? 360 - Index0 * 30 : 0;
+    console.log();
     return { value: selectedPrize.name, degree, link: prizeLink };
   } catch (error) {
     console.error("Ошибка в getRandomPrize:", error);
