@@ -60,11 +60,10 @@ const getRandomPrize = async (telegramId, spins) => {
     let selectedPrize = { name: "0", link: null, caption: null };
     let prizeLink = null;
 
-
     // Для отладки, если когда-то захотим жёстко указать группу/приз:
-    let groupname = "gamesport1";      // пример: хотим искать приз в группе "gamesport1"
-    let nameingroupname = "iphone";    // пример: хотим найти приз "iphone" в этой группе
-    
+    let groupname = null; // пример: хотим искать приз в группе "gamesport1"
+    let nameingroupname = null; // пример: хотим найти приз "iphone" в этой группе
+
     if (prizeType === "prize") {
       let finalPrizeData = null;
       if (groupname && nameingroupname) {
@@ -82,33 +81,31 @@ const getRandomPrize = async (telegramId, spins) => {
       if (!finalPrizeData) {
         const randomGroupIndex = Math.floor(Math.random() * prizesData.length);
         const randomGroup = prizesData[randomGroupIndex];
-        const randomPrizeIndex = Math.floor(Math.random() * randomGroup.prizes.length);
+        const randomPrizeIndex = Math.floor(
+          Math.random() * randomGroup.prizes.length
+        );
         finalPrizeData = randomGroup.prizes[randomPrizeIndex];
       }
 
-      console.log(finalPrizeData)
-      // ===========================================
-      // 3. Теперь finalPrizeData точно есть
-      // Подставляем параметры в ссылку
-      // ===========================================
+      console.log(finalPrizeData);
       if (finalPrizeData) {
         const replacedLink = finalPrizeData.link
           .replace("{click_id}", encodeURIComponent(user.click_id))
           .replace("{telegram_id}", encodeURIComponent(user.telegramId));
-
+        console.log(replacedLink);
         selectedPrize = {
           name: finalPrizeData.name,
           link: replacedLink,
           caption: finalPrizeData.caption,
         };
+        console.log(selectedPrize);
 
-        // Отправляем уведомление
-        await sendHello(
-          user.telegramId,
-          selectedPrize.name,
-          selectedPrize.link,
-          selectedPrize.caption
-        );
+        // await sendHello(
+        //   user.telegramId,
+        //   selectedPrize.name,
+        //   selectedPrize.link,
+        //   selectedPrize.caption
+        // );
       }
     }
 
@@ -128,8 +125,6 @@ const getRandomPrize = async (telegramId, spins) => {
       await user.save();
       selectedPrize.name = "spin";
     }
-    console.log(prizeLink);
-    console.log(prizemygroup, prizemyname);
 
     //Расчет угла и отправка
     let Index0 = round.indexOf(selectedPrize.name);
