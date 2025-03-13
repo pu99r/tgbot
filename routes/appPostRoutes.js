@@ -189,6 +189,7 @@ const handleTask = async (req, res) => {
       // Проверяем, есть ли у проекта id (значит, нужно проверять подписку)
       if (project.id) {
         const isSubscribed = await checkSubscription(botToken, telegramId, project.id);
+        console.log(isSubscribed)
         if (isSubscribed) {
           // Пользователь подписан → добавляем проект в "complete"
           user.complete.push(project.shortName);
