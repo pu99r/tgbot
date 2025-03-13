@@ -78,25 +78,32 @@ const getRandomPrize = async (telegramId, spins) => {
       await user.save();
     }
     if (prizeType === "prize") {
-      let prizeLink = selectedPrize.link;
-      prizeLink = prizeLink
-        .replace("{click_id}", encodeURIComponent(user.click_id))
-        .replace("{telegram_id}", encodeURIComponent(telegramId));
-      await sendHello(
-        telegramId,
-        selectedPrize.name,
-        prizeLink,
-        selectedPrize.caption
-      );
-      const prizeName =
-        groupPrizes[Math.floor(Math.random() * groupPrizes.length)];
+      // Сначала выбираем случайное имя приза
+      const prizeName = groupPrizes[Math.floor(Math.random() * groupPrizes.length)];
+      // Находим объект приза с таким именем в текущей группе
       const prizeData = selectedGroup.prizes.find((p) => p.name === prizeName);
+    
+      // Если приз нашёлся
       if (prizeData) {
+        // Делаем подстановку
+        const prizeLink = prizeData.link
+          .replace("{click_id}", encodeURIComponent(user.click_id))
+          .replace("{telegram_id}", encodeURIComponent(telegramId));
+    
+        // Обновляем selectedPrize, чтобы вернуть корректные данные
         selectedPrize = {
           name: prizeData.name,
           link: prizeLink,
           caption: prizeData.caption,
         };
+    
+        // Отправляем сообщение с призом
+        await sendHello(
+          telegramId,
+          selectedPrize.name,
+          selectedPrize.link,
+          selectedPrize.caption
+        );
       }
     }
     if (prizeType === "spin") {
