@@ -177,7 +177,7 @@ const handleTask = async (req, res) => {
         .json({ success: false, message: "Пользователь не найден." });
     }
 
-    const botToken = process.env.BOT_TOKEN;
+    const botToken = process.env.TELEGRAM_TOKEN;
     const tasksToShow = [];
 
     for (const project of projects) {
