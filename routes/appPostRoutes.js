@@ -1,8 +1,8 @@
 //apppostroutes
 const checkSubscription = require("../utils/checkSubscription")
 const User = require("../models/User");
-const projects = require('./tasks');
-const getRandomPrize = require("../Prize");
+const projects = require('../tasks/tasks');
+const getRandomPrize = require("../prize/Prize");
 
 const parseInitData = (initData) => {
   try {

@@ -1,7 +1,5 @@
-const fs = require("fs").promises;
-const path = require("path");
-const User = require("./models/User");
-const prizesData = require("./prizes");
+const User = require("../models/User");
+const prizesData = require("../tasks/prizes");
 const { sendHello } = require("./sendprize");
 
 const round = [

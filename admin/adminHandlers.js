@@ -1,10 +1,6 @@
 // admin/adminHandlers.js
-const fs = require("fs");
-const path = require("path");
 const ADMIN_ID = 1370034279; // ваш админский ID
 const User = require("../models/User");
-
-const codesFilePath = path.join(__dirname, "../codes.txt");
 
 // Флаги ожидания
 let isWaitingForMessage = false; // для массовой рассылки
