@@ -1,5 +1,4 @@
 //apppostroutes
-const fetch = require("node-fetch");
 const checkSubscription = require("../utils/checkSubscription")
 const User = require("../models/User");
 const projects = require('./tasks');

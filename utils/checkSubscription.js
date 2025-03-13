@@ -1,6 +1,6 @@
 // utils/checkSubscription.js
 
-const fetch = require("node-fetch");
+const https = require("https");
 
 /**
  * Checks if a user is subscribed to a given channel.
@@ -11,24 +11,42 @@ const fetch = require("node-fetch");
  */
 async function checkSubscription(botToken, userTelegramId, channelId) {
   const url = `https://api.telegram.org/bot${botToken}/getChatMember?chat_id=${channelId}&user_id=${userTelegramId}`;
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
 
-    // If request is successful and we have the result
-    if (data.ok && data.result) {
-      const membershipStatus = data.result.status;
-      // Consider these statuses as "subscribed"
-      if (["member", "administrator", "creator"].includes(membershipStatus)) {
-        return true;
-      }
-    }
-    // If data.ok is false or membership not in the set, return false
-    return false;
-  } catch (err) {
-    console.error("Ошибка при проверке подписки:", err);
-    return false;
-  }
+  // Оборачиваем https-запрос в Promise, чтобы использовать async/await
+  return new Promise((resolve) => {
+    https.get(url, (res) => {
+      let rawData = "";
+
+      // Читаем входящие данные по кусочкам
+      res.on("data", (chunk) => {
+        rawData += chunk;
+      });
+
+      // Когда ответ полностью получен
+      res.on("end", () => {
+        try {
+          const data = JSON.parse(rawData);
+
+          // Если запрос успешен и есть результат
+          if (data.ok && data.result) {
+            const membershipStatus = data.result.status;
+            // Подписан ли (member, administrator, creator)
+            if (["member", "administrator", "creator"].includes(membershipStatus)) {
+              return resolve(true);
+            }
+          }
+          // Если статус не подходит или запрос не ok — возвращаем false
+          resolve(false);
+        } catch (err) {
+          console.error("Ошибка при парсинге ответа:", err);
+          resolve(false);
+        }
+      });
+    }).on("error", (err) => {
+      console.error("Ошибка при запросе:", err);
+      resolve(false);
+    });
+  });
 }
 
 module.exports = checkSubscription;
