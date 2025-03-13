@@ -233,7 +233,7 @@ const handleTask = async (req, res) => {
 };
 
 //Добавялет задачу или группу user.complete https://bestx.cam/update-complete/?telegramid=1370034279&shortname=name&group=group1
-const updateOfferComplete = async (req, res) => {
+const updateComplete = async (req, res) => {
   try {
     const { telegramid, group, name, status } = req.query;
 
@@ -300,9 +300,6 @@ const updateOfferComplete = async (req, res) => {
       .json({ success: false, message: "Внутренняя ошибка сервера." });
   }
 };
-
-module.exports = { updateOfferComplete };
-
 
 //Все о пользователе
 const handleWebAppData = async (req, res) => {
@@ -374,10 +371,6 @@ const handleWebAppData = async (req, res) => {
       message: "Внутренняя ошибка сервера.",
     });
   }
-};
-
-module.exports = {
-  handleWebAppData,
 };
 
 
