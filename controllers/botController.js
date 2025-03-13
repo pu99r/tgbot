@@ -4,32 +4,9 @@ const path = require("path");
 const User = require("../models/User");
 const logger = require("../utils/logger");
 
-const CHANNEL_ID = process.env.CHANNEL_ID;
-async function activateUser(user) {
-  if (!user.activated) {
-    // Выдаём 3 спина самому пользователю
-    user.spins = 3;
-    user.activated = true;
-
-    // Если есть реферер, даём ему +1 спин
-    if (user.referredBy) {
-      await User.findByIdAndUpdate(user.referredBy, {
-        $push: { referrals: user._id },
-
-      });
-      logger.info(
-        `Пользователь ${user.username} активирован, рефереру добавлен 1 спин`
-      );
-    }
-
-    await user.save();
-    logger.info(`Пользователь ${user.username} успешно активирован`);
-  }
-}
+const CHANNEL_ID = process.env.CHANNEL_ID; // Если не нужен, можно удалить
 
 // -- ОСНОВНАЯ ФУНКЦИЯ /start --
-// https://t.me/rollingwinbot?start=kt_111
-// https://t.me/rollingwinbot?start=ref_111
 const handleStart = async (bot, msg, match) => {
   const chatId = msg.chat.id;
   const username =
@@ -74,38 +51,26 @@ const handleStart = async (bot, msg, match) => {
         username,
         referredBy,
         spins: 0,
-        activated: false,
         click_id: clickId,
       });
       await user.save();
       logger.info(`Новый пользователь создан: ${username} (ID: ${chatId})`);
 
-      // Если есть реферер, добавляем ссылку на пользователя в его referrals и устанавливаем activespins: false
+      const addReferral = async (referredBy, user) => {
+        if (referredBy) {
+          await User.findByIdAndUpdate(referredBy, {
+            $push: { referrals: { user: user._id } },
+          });
+        }
+      };
       if (referredBy) {
-        await User.findByIdAndUpdate(referredBy, {
-          $push: { referrals: { user: user._id, activespins: false } },
-        });
-        logger.info(`Пользователь ${username} добавлен в рефералы с activespins: false`);
+        await addReferral(referredBy, user);
       }
     }
 
-    // Проверяем статус подписки
-    let memberStatus;
-    try {
-      const res = await bot.getChatMember(CHANNEL_ID, chatId);
-      memberStatus = res.status;
-      logger.info(`Статус пользователя ${chatId} в канале: ${memberStatus}`);
-    } catch (err) {
-      logger.error("Ошибка при getChatMember:", err);
-      memberStatus = "left";
-    }
-
-    if (["member", "administrator", "creator"].includes(memberStatus)) {
-      await activateUser(user);
-      await sendMainFunctionalityMessage(bot, chatId, user);
-    } else {
-      await sendSubscriptionPrompt(bot, chatId);
-    }
+    // Здесь убрана логика проверки подписки/активации
+    // Вместо этого сразу отправляем основное сообщение
+    await sendMainFunctionalityMessage(bot, chatId, user);
   } catch (error) {
     logger.error("Ошибка при обработке команды /start:", error);
     await bot.sendMessage(
@@ -115,109 +80,9 @@ const handleStart = async (bot, msg, match) => {
   }
 };
 
-// -- ОБРАБОТКА CALLBACK_QUERY --
-const handleCallbackQuery = async (bot, query) => {
-  const chatId = query.message.chat.id;
-  const messageId = query.message.message_id;
-  const data = query.data;
-  const callbackQueryId = query.id;
-
-  logger.info(
-    `Получен callback_query: ${callbackQueryId} от пользователя ${query.from.id}`
-  );
-
-  if (data === "check_subscribe") {
-    try {
-      // Ответ пользователю о том, что идёт проверка
-      await bot.answerCallbackQuery(callbackQueryId, {
-        text: "⚠️ Пожалуйста, ожидайте, мы проверяем!",
-      });
-      logger.info(`Ответ на callback_query ${callbackQueryId} отправлен`);
-
-      let memberStatus;
-      try {
-        const res = await bot.getChatMember(CHANNEL_ID, chatId);
-        memberStatus = res.status;
-        logger.info(`Статус пользователя ${chatId} в канале: ${memberStatus}`);
-      } catch (err) {
-        logger.error("Ошибка при getChatMember:", err);
-        memberStatus = "left";
-      }
-
-      const user = await User.findOne({ telegramId: chatId });
-
-      if (!user) {
-        // Теоретически такого быть не должно, но на всякий случай
-        logger.warn(
-          `Пользователь c ID ${chatId} не найден в базе при check_subscribe`
-        );
-        await bot.sendMessage(
-          chatId,
-          "Произошла ошибка. Попробуйте заново набрать /start."
-        );
-        return;
-      }
-
-      if (["member", "administrator", "creator"].includes(memberStatus)) {
-        // Пользователь подписан — активируем (если ещё не активирован) и отправляем основное сообщение
-        await activateUser(user);
-        await sendMainFunctionalityMessage(bot, chatId, user, messageId);
-      } else {
-        // По-прежнему не подписан — удаляем старое сообщение и показываем заново
-        const newText = `
-Увы, Вы не подписаны на наш Telegram-канал.
-
-Подпишитесь на канал и получите 3 спина на счет.
-
-Подпишитесь и нажмите «Продолжить».
-        `;
-        const inlineKeyboard = [
-          [
-            {
-              text: "Перейти на канал",
-              url: process.env.MAINCHANNEL,
-            },
-          ],
-          [
-            {
-              text: "Продолжить",
-              callback_data: "check_subscribe",
-            },
-          ],
-        ];
-
-        try {
-          // Удаляем предыдущее сообщение
-          await bot.deleteMessage(chatId, messageId);
-
-          const imagePath = path.join(__dirname, "../img", "pursh.png");
-          await bot.sendPhoto(chatId, imagePath, {
-            caption: newText,
-            parse_mode: "HTML",
-            reply_markup: { inline_keyboard: inlineKeyboard },
-          });
-        } catch (error) {
-          logger.error("Ошибка при обновлении сообщения подписки:", error);
-        }
-      }
-    } catch (error) {
-      logger.error("Ошибка при обработке callback_query:", error);
-      await bot.sendMessage(
-        chatId,
-        "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже."
-      );
-    }
-  }
-};
-
-// -- ОТПРАВКА ОСНОВНОГО СООБЩЕНИЯ --
-const sendMainFunctionalityMessage = async (
-  bot,
-  chatId,
-  user,
-  messageId = null
-) => {
-  // Если передан messageId, то удаляем старое сообщение
+// -- ОТПРАВКА ОСНОВНОГО СООБЩЕНИЯ (ОСТАВЛЕНА ПО ПРОСЬБЕ) --
+const sendMainFunctionalityMessage = async (bot, chatId, user, messageId = null) => {
+  // Если передан messageId, то удаляем старое сообщение (если нужно)
   if (messageId) {
     try {
       await bot.deleteMessage(chatId, messageId);
@@ -233,25 +98,6 @@ const sendMainFunctionalityMessage = async (
     const referralLink = `https://t.me/${process.env.BOT_USERNAME}?start=${userReferralCode}`;
     user.spins = user.spins || 0;
     await user.save();
-
-    let referralsStatus = "Нет рефералов";
-    if (user.referrals && user.referrals.length > 0) {
-      const referralDetails = await Promise.all(
-        user.referrals.map(async (referral) => {
-          const referrerUser = await User.findById(referral.user);
-          if (referrerUser) {
-            return `<b>${referrerUser.username}</b> — <i>${
-              referral.activespins ? "Активирован" : "Не активирован"
-            }</i>`;
-          }
-          return null;
-        })
-      );
-
-      referralsStatus = referralDetails.filter(Boolean).join("\n");
-    }
-
-
     const webAppButton = {
       text: "Открыть приложение",
       web_app: { url: process.env.WEB_APP_URL },
@@ -267,12 +113,12 @@ const sendMainFunctionalityMessage = async (
     const message = `
 🎉 <b>Добро пожаловать, ${user.username}!</b>
 
-<b>WB Рулетка</b> — это ваш уникальный шанс выиграть одну из <b>тысячи бесплатных купонов</b> каждый день!  
+<b>WB Рулетка</b> — это ваш уникальный шанс выиграть одну из <b>тысячи бесплатных купонов</b> каждый день!
 Мы гарантируем прозрачность и честную статистику — <b>победит каждый участник</b>.
 
-📢 <b>Не упустите возможность:</b>  
-Делитесь своей реферальной ссылкой и получайте дополнительные вращения:  
-<a href="${referralLink || "#"}">${referralLink || "Реферальная ссылка"}</a>  
+📢 <b>Не упустите возможность:</b>
+Делитесь своей реферальной ссылкой и получайте дополнительные вращения:
+<a href="${referralLink || "#"}">${referralLink || "Реферальная ссылка"}</a>
 • Приглашено друзей: <b>${referralsCount || 0}</b>
 • Спины: <b>${user.spins || 0}</b>
 • Спинов откручено: <b>${user.spentSpins || 0}</b>
@@ -280,11 +126,7 @@ const sendMainFunctionalityMessage = async (
 • Задания: <b>${user.complete || 0}</b>
 • Мэйн офферы: <b>${user.offercomplete || 0}</b>
 • Баланс: <b>${user.balance || 0}</b>
-• Активировал подписку на канал: <b>${user.activated || 0}</b>
 • click_id: <b>${user.click_id || 0}</b>
-
-<b>Список ваших рефералов и их статусы:</b>
-${referralsStatus}
 
 🔥 Подарочные купоны ждут вас прямо сейчас! Начните игру и станьте одним из победителей! 🍀
 `;
@@ -313,55 +155,6 @@ ${referralsStatus}
   }
 };
 
-// -- ПРОСЬБА ПОДПИСАТЬСЯ --
-const sendSubscriptionPrompt = async (bot, chatId) => {
-  const welcomeText = `
-🎉 <b>Добро пожаловать в WB Рулетку!</b>
-
-Чтобы получить <b>3 БЕСПЛАТНЫХ ПРОКРУТА КОЛЕСА</b>, нужно подписаться на наш канал. 
-Это ваш шанс выиграть отличные подарочные купоны на покупки.
-
-🛡️ <b>Для активации:</b>
-1️⃣ Подпишитесь на наш <b>новостной канал</b>, чтобы не пропустить важные обновления.
-2️⃣ Нажмите кнопку <b>«Продолжить»</b>.
-
-Это простой шаг, чтобы убедиться, что вы настоящий участник, а не бот.
-
-🎁 <b>Не упустите свой шанс — начните выигрывать уже сегодня!</b> 🚀
-`;
-
-  const inlineKeyboard = [
-    [
-      {
-        text: "Перейти на канал",
-        url: process.env.MAINCHANNEL,
-      },
-    ],
-    [
-      {
-        text: "Продолжить",
-        callback_data: "check_subscribe",
-      },
-    ],
-  ];
-
-  const imagePath = path.join(__dirname, "../img", "pursh.png");
-
-  try {
-    await bot.sendPhoto(chatId, imagePath, {
-      caption: welcomeText,
-      parse_mode: "HTML",
-      reply_markup: { inline_keyboard: inlineKeyboard },
-    });
-
-    logger.info(
-      `Сообщение с просьбой подписаться отправлено пользователю ${chatId}.`
-    );
-  } catch (error) {
-    logger.error("Ошибка при отправке приветственного сообщения:", error);
-  }
-};
-
 // -- ИНИЦИАЛИЗАЦИЯ ОБРАБОТЧИКОВ --
 const setupBotHandlers = (bot) => {
   // Обработка команды /start
@@ -369,10 +162,7 @@ const setupBotHandlers = (bot) => {
     handleStart(bot, msg, match);
   });
 
-  // Обработка callback_query
-  bot.on("callback_query", (query) => {
-    handleCallbackQuery(bot, query);
-  });
+  // Удалили логику callback_query, т.к. была завязана на подписку/активацию
 };
 
-module.exports = { setupBotHandlers };
+module.exports = { setupBotHandlers, sendMainFunctionalityMessage };

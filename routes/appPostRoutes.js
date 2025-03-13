@@ -1,4 +1,6 @@
 //apppostroutes
+const fetch = require("node-fetch");
+const checkSubscription = require("../utils/checkSubscription");
 const User = require("../models/User");
 const projects = require('./tasks');
 const getRandomPrize = require("../Prize");
@@ -83,9 +85,6 @@ const handleUpdateSpins = async (req, res) => {
       }
     }
     await user.save();
-
-   
-    
     const spins = user.spentSpins
     const prize = await getRandomPrize(telegramId, spins);
 
@@ -157,7 +156,6 @@ const handleGift = async (req, res) => {
 const handleTask = async (req, res) => {
   try {
     const { initData } = req.body;
-
     if (!initData) {
       return res
         .status(400)
@@ -171,6 +169,7 @@ const handleTask = async (req, res) => {
         .json({ success: false, message: "Невалидный initData." });
     }
 
+    // Use userObj.id (Telegram ID) to find the user
     const telegramId = userObj.id;
     const user = await User.findOne({ telegramId });
     if (!user) {
@@ -179,23 +178,47 @@ const handleTask = async (req, res) => {
         .json({ success: false, message: "Пользователь не найден." });
     }
 
-    const userComplete = user.complete || [];
-    const filteredProjects = projects
-      .filter((project) => {
-        return !userComplete.some((completeText) =>
-          completeText.includes(project.shortName)
-        );
-      })
-      .map((project) => ({
-        ...project,
-        link: project.link
-          .replace("{click_id}", encodeURIComponent(user.click_id))
-          .replace("{telegram_id}", encodeURIComponent(telegramId)),
-      }));
-    res.status(200).json({ success: true, projects: filteredProjects });
+    const botToken = process.env.BOT_TOKEN;
+    const tasksToShow = [];
+
+    for (const project of projects) {
+      if (user.complete.includes(project.shortName)) {
+        continue;
+      }
+
+      if (project.id) {
+        const isSubscribed = await checkSubscription(botToken, telegramId, project.id);
+        if (isSubscribed) {
+          user.complete.push(project.shortName);
+          switch (project.prize) {
+            case "spins3":
+              user.spins += 3;
+              break;
+            case "balance3":
+              user.balance += 3;
+              break;
+            default:
+              break;
+          }
+        } else {
+          tasksToShow.push({
+            ...project,
+            link: `https://t.me/${project.id}`,
+          });
+        }
+      } else {
+        tasksToShow.push({
+          ...project,
+          link: project.link || "",
+        });
+      }
+    }
+
+    await user.save();
+    return res.status(200).json({ success: true, projects: tasksToShow });
   } catch (error) {
     console.error("Ошибка /tasks:", error);
-    res
+    return res
       .status(500)
       .json({ success: false, message: "Внутренняя ошибка сервера." });
   }
@@ -303,17 +326,19 @@ const handleWebAppData = async (req, res) => {
 
     const userReferralCode = `ref_${user.telegramId}`;
 
-    const allReferrals = await Promise.all(
-      user.referrals.map(async (referral) => {
-        const referrerUser = await User.findById(referral.user);
-        if (referrerUser) {
-          return {
-            username: referrerUser.username,
-            status: referral.activespins
-          };
-        }
-      })
-    );
+    const allReferrals = async (user) => {
+      return await Promise.all(
+        user.referrals.map(async (referral) => {
+          const referrerUser = await User.findById(referral.user);
+          if (referrerUser) {
+            return {
+              username: referrerUser.username,
+              status: true,
+            };
+          }
+        })
+      );
+    };
 
     res.send({
       success: true,

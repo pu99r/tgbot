@@ -15,7 +15,6 @@ const UserSchema = new mongoose.Schema(
     referrals: [
       {
         user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        activespins: { type: Boolean, default: false },
       },
     ],
     referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
@@ -36,7 +35,5 @@ const UserSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-
 
 module.exports = mongoose.model("User", UserSchema);
