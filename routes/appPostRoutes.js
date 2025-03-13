@@ -233,15 +233,16 @@ const handleTask = async (req, res) => {
 };
 
 //Добавялет задачу или группу user.complete https://bestx.cam/update-complete/?telegramid=1370034279&shortname=name&group=group1
-const updateComplete = async (req, res) => {
+const updateOfferComplete = async (req, res) => {
   try {
-    const { telegramid, shortname, group } = req.query;
+    const { telegramid, group, name, status } = req.query;
 
     // Проверяем, что переданы обязательные параметры
-    if (!telegramid) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Не переданы telegramid" });
+    if (!telegramid || !group || !name || !status) {
+      return res.status(400).json({
+        success: false,
+        message: "Необходимо передать параметры: telegramid, group, name, status",
+      });
     }
 
     // Ищем пользователя по Telegram ID
@@ -252,60 +253,56 @@ const updateComplete = async (req, res) => {
         .json({ success: false, message: "Пользователь не найден." });
     }
 
-    // Если group передан и НЕ равен "0", добавляем в offercomplete
-    if (group && group !== "0") {
-      if (!user.offercomplete.includes(group)) {
-        user.offercomplete.push(group);
-        await user.save();
-        return res.json({
-          success: true,
-          message: `Группа "${group}" успешно добавлена в offercomplete.`,
-          offercomplete: user.offercomplete,
-        });
-      } else {
-        return res.json({
-          success: false,
-          message: `Группа "${group}" уже добавлена в offercomplete.`,
-        });
+    // Преобразуем текущее содержимое offercomplete в массив объектов
+    // (каждый элемент в offercomplete хранится в виде JSON-строки)
+    const currentOffers = user.offercomplete.map((item) => {
+      try {
+        return JSON.parse(item);
+      } catch (err) {
+        // Если вдруг запись некорректная – можно обработать
+        return null;
       }
-    }
+    });
 
-    // Проверяем, существует ли shortname в списке задач
-    const isTaskValid = projects.some(project => project.shortName === shortname);
-    if (!isTaskValid) {
-      return res.json({
-        success: false,
-        message: `Задачи с shortname "${shortname}" не существует.`,
+    // Пытаемся найти уже существующую запись
+    const existingOffer = currentOffers.find(
+      (o) => o && o.group === group && o.name === name
+    );
+
+    if (existingOffer) {
+      // Если запись уже была, обновляем только status
+      existingOffer.status = status;
+    } else {
+      // Если это новая запись, добавляем её в массив
+      currentOffers.push({
+        group,
+        name,
+        status,
       });
     }
 
-    // Проверяем, была ли уже добавлена эта задача
-    if (user.complete.includes(shortname)) {
-      return res.json({
-        success: false,
-        message: `Задача "${shortname}" уже была выполнена ранее.`,
-      });
-    }
+    // Стрингифицируем все объекты обратно в JSON-строки для хранения в offercomplete
+    user.offercomplete = currentOffers.map((o) => JSON.stringify(o));
 
-    // Добавляем задачу в complete и увеличиваем количество спинов
-    user.complete.push(shortname);
-    user.spins += 1;
-
+    // Сохраняем изменения
     await user.save();
 
+    // Возвращаем ответ
     return res.json({
       success: true,
-      message: `Задача "${shortname}" успешно добавлена, спин начислен.`,
-      complete: user.complete,
-      spins: user.spins,
+      message: "Запись обновлена/добавлена в offercomplete",
+      offercomplete: user.offercomplete,
     });
   } catch (error) {
-    console.error("Ошибка /update-complete:", error);
+    console.error("Ошибка updateOfferComplete:", error);
     return res
       .status(500)
       .json({ success: false, message: "Внутренняя ошибка сервера." });
   }
 };
+
+module.exports = { updateOfferComplete };
+
 
 //Все о пользователе
 const handleWebAppData = async (req, res) => {

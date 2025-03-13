@@ -4,7 +4,6 @@ const path = require("path");
 const User = require("../models/User");
 const logger = require("../utils/logger");
 
-
 // -- ОСНОВНАЯ ФУНКЦИЯ /start --
 const handleStart = async (bot, msg, match) => {
   const chatId = msg.chat.id;
@@ -67,8 +66,6 @@ const handleStart = async (bot, msg, match) => {
       }
     }
 
-    // Здесь убрана логика проверки подписки/активации
-    // Вместо этого сразу отправляем основное сообщение
     await sendMainFunctionalityMessage(bot, chatId, user);
   } catch (error) {
     logger.error("Ошибка при обработке команды /start:", error);
@@ -95,20 +92,44 @@ const sendMainFunctionalityMessage = async (bot, chatId, user, messageId = null)
     const referralsCount = await User.countDocuments({ referredBy: user._id });
     const userReferralCode = `ref_${user.telegramId}`;
     const referralLink = `https://t.me/${process.env.BOT_USERNAME}?start=${userReferralCode}`;
-    user.spins = user.spins || 0;
+    
+    user.spins = user.spins || 0; 
     await user.save();
-    const webAppButton = {
-      text: "Открыть приложение",
-      web_app: { url: process.env.WEB_APP_URL },
-    };
-    const newsButton = {
-      text: "Новости",
-      url: process.env.MAINCHANNEL,
-    };
-    const reviewsButton = {
-      text: "Отзывы",
-      url: process.env.OTZOVCHANNEL,
-    };
+
+    // 1. Парсим данные из offercomplete
+    // Предполагаем, что каждый элемент хранится в JSON-строке вида {"group":"1","name":"name1","status":"reg"}
+    // Если формат другой, подстроите парсинг
+    let offercompleteInfo = "";
+    if (Array.isArray(user.offercomplete) && user.offercomplete.length > 0) {
+      // Преобразуем каждый элемент в объект
+      const parsedOffers = user.offercomplete.map(item => {
+        try {
+          return JSON.parse(item);
+        } catch (err) {
+          // Если парсить не удалось, просто возвращаем необработанную строку
+          return { raw: item };
+        }
+      });
+
+      // Формируем удобный для чтения список
+      offercompleteInfo = parsedOffers
+        .map((offer, index) => {
+          // Если удалось распарсить как объект со структурой {group, name, status}
+          if (offer.group && offer.name && offer.status) {
+            return `   ${index + 1}. Группа: <b>${offer.group}</b>, Название: <b>${offer.name}</b>, Статус: <b>${offer.status}</b>`;
+          } else if (offer.raw) {
+            // Если это "сырые" данные, которые не удалось распарсить
+            return `   ${index + 1}. (Не удалось распарсить) <b>${offer.raw}</b>`;
+          }
+          // На случай, если какой-то объект не по формату, но без поля raw
+          return `   ${index + 1}. (Неизвестный формат) <b>${JSON.stringify(offer)}</b>`;
+        })
+        .join("\n");
+    } else {
+      offercompleteInfo = "Нет данных по офферам.";
+    }
+
+    // 2. Формируем текст сообщения
     const message = `
 🎉 <b>Добро пожаловать, ${user.username}!</b>
 
@@ -121,19 +142,35 @@ const sendMainFunctionalityMessage = async (bot, chatId, user, messageId = null)
 • Приглашено друзей: <b>${referralsCount || 0}</b>
 • Спины: <b>${user.spins || 0}</b>
 • Спинов откручено: <b>${user.spentSpins || 0}</b>
-• Дата реги: <b>${user.registrationDate || 0}</b>
-• Задания: <b>${user.complete || 0}</b>
-• Мэйн офферы: <b>${user.offercomplete || 0}</b>
+• Дата реги: <b>${user.registrationDate || "n/a"}</b>
+• Задания: <b>${user.complete.join(", ") || "нет"}</b>
 • Баланс: <b>${user.balance || 0}</b>
 • click_id: <b>${user.click_id || 0}</b>
 
-🔥 Подарочные купоны ждут вас прямо сейчас! Начните игру и станьте одним из победителей! 🍀
-`;
+<b>Список офферов (offercomplete):</b>
+${offercompleteInfo}
 
+🔥 Подарочные купоны ждут вас прямо сейчас! Начните игру и станьте одним из победителей! 🍀
+`.trim();
+
+    // 3. Кнопки
+    const webAppButton = {
+      text: "Открыть приложение",
+      web_app: { url: process.env.WEB_APP_URL },
+    };
+    const newsButton = {
+      text: "Новости",
+      url: process.env.MAINCHANNEL,
+    };
+    const reviewsButton = {
+      text: "Отзывы",
+      url: process.env.OTZOVCHANNEL,
+    };
     const replyMarkup = {
       inline_keyboard: [[webAppButton], [newsButton, reviewsButton]],
     };
 
+    // 4. Отправка изображения и сообщения
     const imagePath = path.join(__dirname, "../img", "main.png");
 
     await bot.sendPhoto(chatId, imagePath, {
@@ -142,9 +179,7 @@ const sendMainFunctionalityMessage = async (bot, chatId, user, messageId = null)
       reply_markup: replyMarkup,
     });
 
-    logger.info(
-      `Основное сообщение с изображением отправлено пользователю ${chatId}.`
-    );
+    logger.info(`Основное сообщение с изображением отправлено пользователю ${chatId}.`);
   } catch (error) {
     logger.error("Ошибка в sendMainFunctionalityMessage:", error);
     await bot.sendMessage(
@@ -160,8 +195,6 @@ const setupBotHandlers = (bot) => {
   bot.onText(/\/start(?: (.+))?/, (msg, match) => {
     handleStart(bot, msg, match);
   });
-
-  // Удалили логику callback_query, т.к. была завязана на подписку/активацию
 };
 
 module.exports = { setupBotHandlers, sendMainFunctionalityMessage };

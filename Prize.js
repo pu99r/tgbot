@@ -19,20 +19,20 @@ const getRandomPrize = async (telegramId) => {
       return null;
     }
 
-    // Регулируемые шансы выпадения
+    // Регулируемые шансы выпадения %
     const chances = {
-      zero: 25, // Выпадет 0
-      prize: 25, // Выпадет prize
-      stars: 25, // Выпадут звезды
-      spin: 25, // Выпадет spin (+1 спин игроку)
+      zero: 25,
+      prize: 25,
+      stars: 25,
+      spin: 25,
     };
     
-    // Регулируемые шансы выпадения разных звезд
+    // Регулируемые шансы выпадения разных звезд %
     const starChances = {
-      star10: 30,
-      star50: 30,
-      star100: 20,
-      star300: 20,
+      star10: 25,
+      star50: 25,
+      star100: 25,
+      star300: 25,
     };
 
     const completedGroups = user.offercomplete || [];
