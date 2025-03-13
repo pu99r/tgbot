@@ -34,10 +34,10 @@ const sendHello = async (telegramId, prizeName, prizeLink, prizeCaption) => {
       let photoPath;
       switch (prizeName) {
         case "5.000":
-          photoPath = path.resolve(__dirname, "./img/5000.png");
+          photoPath = path.resolve(__dirname, "../img/5000.png");
           break;
         case "iphone":
-          photoPath = path.resolve(__dirname, "./img/iphone.png");
+          photoPath = path.resolve(__dirname, "../img/iphone.png");
           break;
         default:
           console.error(`Неизвестный приз: ${prizeName}`);
