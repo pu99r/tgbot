@@ -4,7 +4,6 @@ const path = require("path");
 const User = require("../models/User");
 const logger = require("../utils/logger");
 
-const CHANNEL_ID = process.env.CHANNEL_ID; // Если не нужен, можно удалить
 
 // -- ОСНОВНАЯ ФУНКЦИЯ /start --
 const handleStart = async (bot, msg, match) => {

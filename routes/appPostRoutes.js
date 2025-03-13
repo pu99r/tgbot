@@ -181,14 +181,19 @@ const handleTask = async (req, res) => {
     const tasksToShow = [];
 
     for (const project of projects) {
+      // Если этот проект уже был выполнен пользователем, пропускаем
       if (user.complete.includes(project.shortName)) {
         continue;
       }
 
+      // Проверяем, есть ли у проекта id (значит, нужно проверять подписку)
       if (project.id) {
         const isSubscribed = await checkSubscription(botToken, telegramId, project.id);
         if (isSubscribed) {
+          // Пользователь подписан → добавляем проект в "complete"
           user.complete.push(project.shortName);
+
+          // Начисляем награду
           switch (project.prize) {
             case "spins3":
               user.spins += 3;
@@ -200,20 +205,18 @@ const handleTask = async (req, res) => {
               break;
           }
         } else {
-          tasksToShow.push({
-            ...project,
-            link: `https://t.me/${project.id}`,
-          });
+          // Пользователь ещё не подписан → выводим этот проект, используя готовую ссылку
+          tasksToShow.push({ ...project });
         }
       } else {
-        tasksToShow.push({
-          ...project,
-          link: project.link || "",
-        });
+        // Если у проекта нет id, подписку не проверяем, просто выводим
+        tasksToShow.push({ ...project });
       }
     }
 
+    // Сохраняем обновлённые данные о пользователе (complete, spins, balance)
     await user.save();
+
     return res.status(200).json({ success: true, projects: tasksToShow });
   } catch (error) {
     console.error("Ошибка /tasks:", error);

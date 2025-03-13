@@ -10,7 +10,9 @@ const https = require("https");
  * @returns {Promise<boolean>} - Returns true if user is subscribed; otherwise false.
  */
 async function checkSubscription(botToken, userTelegramId, channelId) {
-  const url = `https://api.telegram.org/bot${botToken}/getChatMember?chat_id=${channelId}&user_id=${userTelegramId}`;
+  const url = `https://api.telegram.org/bot${botToken}/getChatMember?chat_id=-${channelId}&user_id=${userTelegramId}`;
+
+  // https://api.telegram.org/bot7688745445:AAE4cOnNWghqnlNN29I4oQy-XT8fa3Mi0jc/getChatMember?chat_id=21002265070330&user_id=1370034279
 
   // Оборачиваем https-запрос в Promise, чтобы использовать async/await
   return new Promise((resolve) => {
