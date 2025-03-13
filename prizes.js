@@ -1,7 +1,7 @@
 // prizes.js
 const prizesData = [
     {
-      group: "group1",
+      group: "gamesport",
       prizes: [
         {
           name: "iphone",
