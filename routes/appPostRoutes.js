@@ -189,7 +189,6 @@ const handleTask = async (req, res) => {
       // Проверяем, есть ли у проекта id (значит, нужно проверять подписку)
       if (project.id) {
         const isSubscribed = await checkSubscription(botToken, telegramId, project.id);
-        console.log(isSubscribed)
         if (isSubscribed) {
           // Пользователь подписан → добавляем проект в "complete"
           user.complete.push(project.shortName);
@@ -320,6 +319,8 @@ const handleWebAppData = async (req, res) => {
     }
 
     const telegramId = userObj.id;
+
+    // Находим пользователя
     const user = await User.findOne({ telegramId }).populate("referrals", "username");
     if (!user) {
       return res
@@ -327,11 +328,13 @@ const handleWebAppData = async (req, res) => {
         .json({ success: false, message: "Пользователь не найден." });
     }
 
+    // Формируем реферальный код
     const userReferralCode = `ref_${user.telegramId}`;
 
-    const allReferrals = async (user) => {
-      return await Promise.all(
-        user.referrals.map(async (referral) => {
+    // Функция, которая собирает информацию о каждом приглашённом пользователе
+    const getAllReferrals = async (userDoc) => {
+      return Promise.all(
+        userDoc.referrals.map(async (referral) => {
           const referrerUser = await User.findById(referral.user);
           if (referrerUser) {
             return {
@@ -339,10 +342,17 @@ const handleWebAppData = async (req, res) => {
               status: true,
             };
           }
+          return null; 
         })
       );
     };
 
+    const referralList = await getAllReferrals(user);
+
+    // Логируем результат, если нужно
+    console.log("referralList:", referralList);
+
+    // Возвращаем ответ
     res.send({
       success: true,
       referralCode: userReferralCode,
@@ -350,16 +360,22 @@ const handleWebAppData = async (req, res) => {
       spins: user.spins,
       registrationDate: user.registrationDate,
       balance: user.balance,
-      referralList: allReferrals, 
+      referralList, 
       spentSpins: user.spentSpins,
     });
   } catch (error) {
     console.error("Ошибка /webapp-data:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Внутренняя ошибка сервера." });
+    res.status(500).json({
+      success: false,
+      message: "Внутренняя ошибка сервера.",
+    });
   }
 };
+
+module.exports = {
+  handleWebAppData,
+};
+
 
 module.exports = {
   handleWebAppData,

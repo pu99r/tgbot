@@ -15,7 +15,6 @@ async function checkSubscription(botToken, userTelegramId, channelId) {
   // https://api.telegram.org/bot7688745445:AAE4cOnNWghqnlNN29I4oQy-XT8fa3Mi0jc/getChatMember?chat_id=21002265070330&user_id=1370034279
 
   // Оборачиваем https-запрос в Promise, чтобы использовать async/await
-  console.log(url)
   return new Promise((resolve) => {
     https.get(url, (res) => {
       let rawData = "";
