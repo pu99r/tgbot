@@ -15,6 +15,7 @@ const UserSchema = new mongoose.Schema(
     referrals: [
       {
         user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        status: { type: Boolean, default: false },
       },
     ],
     referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },

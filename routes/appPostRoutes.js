@@ -80,6 +80,12 @@ const handleUpdateSpins = async (req, res) => {
       if (referrer) {
         referrer.balance += 1000;
         referrer.spins += 1000;
+        const referralToUpdate = referrer.referrals.find(
+          (r) => r.user.toString() === user._id.toString()
+        );
+        if (referralToUpdate) {
+          referralToUpdate.status = true; 
+        }
         await referrer.save();
       }
     }
@@ -335,11 +341,12 @@ const handleWebAppData = async (req, res) => {
     const getAllReferrals = async (userDoc) => {
       return Promise.all(
         userDoc.referrals.map(async (referral) => {
-          const referrerUser = await User.findById(referral.user);
+          const { user: referralUserId, status } = referral;
+          const referrerUser = await User.findById(referralUserId);
           if (referrerUser) {
             return {
               username: referrerUser.username,
-              status: true,
+              status: status
             };
           }
           return null; 
@@ -350,7 +357,7 @@ const handleWebAppData = async (req, res) => {
     const referralList = await getAllReferrals(user);
 
     // Логируем результат, если нужно
-    console.log("referralList:", referralList);
+    // console.log("referralList:", referralList);
 
     // Возвращаем ответ
     res.send({
