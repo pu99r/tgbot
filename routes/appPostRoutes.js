@@ -68,9 +68,14 @@ const handleUpdateSpins = async (req, res) => {
       });
     }
 
-    if (operation === "plus") {
-      user.spins = user.spins + 1;
-    } else {
+    // if (operation === "plus") {
+    //   user.spins = user.spins + 1;
+    // } else {
+    //   user.spins = user.spins -1;
+    //   user.spentSpins = user.spentSpins + 1; 
+    // }
+
+    if (operation === "minus") {
       user.spins = user.spins -1;
       user.spentSpins = user.spentSpins + 1; 
     }
@@ -232,7 +237,7 @@ const handleTask = async (req, res) => {
   }
 };
 
-//Добавялет задачу или группу user.complete https://bestx.cam/update-complete/?telegramid=1370034279&shortname=name&group=group1
+//Добавялет задачу или группу user.complete https://bestx.cam/update-complete/?telegramid=1370034279&group=group&name=name&status=status
 const updateComplete = async (req, res) => {
   try {
     const { telegramid, group, name, status } = req.query;

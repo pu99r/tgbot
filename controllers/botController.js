@@ -43,7 +43,6 @@ const handleStart = async (bot, msg, match) => {
     let user = await User.findOne({ telegramId: chatId });
 
     if (!user) {
-      // Регистрируем пользователя
       user = new User({
         telegramId: chatId,
         username,
@@ -191,7 +190,6 @@ ${offercompleteInfo}
 
 // -- ИНИЦИАЛИЗАЦИЯ ОБРАБОТЧИКОВ --
 const setupBotHandlers = (bot) => {
-  // Обработка команды /start
   bot.onText(/\/start(?: (.+))?/, (msg, match) => {
     handleStart(bot, msg, match);
   });

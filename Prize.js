@@ -78,6 +78,14 @@ const getRandomPrize = async (telegramId) => {
           caption: prizeData.caption,
         };
       }
+      if (prizeData) {
+        await sendHello(
+          telegramId, 
+          selectedPrize.name, 
+          selectedPrize.link, 
+          selectedPrize.caption
+        );
+      }
     } else if (prizeType === "spin") {
       user.spins += 1;
       await user.save();
@@ -94,6 +102,9 @@ const getRandomPrize = async (telegramId) => {
         .replace("{telegram_id}", encodeURIComponent(telegramId));
     } else {
       prizeLink = null;
+    }
+    if (prizeType === "prize") {
+
     }
 
     return { value: selectedPrize.name, degree, link: prizeLink };
