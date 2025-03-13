@@ -70,12 +70,11 @@ const getRandomPrize = async (telegramId, spins) => {
       if (groupname && nameingroupname) {
         const foundGroup = prizesData.find((g) => g.group === groupname);
         if (foundGroup) {
-          // Ищем приз по имени внутри найденной группы
           const foundPrize = foundGroup.prizes.find(
             (p) => p.name === nameingroupname
           );
           if (foundPrize) {
-            finalPrizeData = foundPrize; // Если всё совпало, сохраняем
+            finalPrizeData = foundPrize;
           }
         }
       }
@@ -125,7 +124,6 @@ const getRandomPrize = async (telegramId, spins) => {
     //Расчет угла и отправка
     let Index0 = round.indexOf(selectedPrize.name);
     let degree = Index0 !== -1 ? 360 - Index0 * 30 : 0;
-    console.log(selectedPrize)
     return { value: selectedPrize.name, degree, link: prizeLink };
   } catch (error) {
     console.error("Ошибка в getRandomPrize:", error);
