@@ -27,6 +27,10 @@ const getRandomPrize = async (telegramId, spins) => {
       return null;
     }
 
+    // Для отладки, если когда-то захотим жёстко указать группу/приз:
+    let groupname = null;
+    let nameingroupname = null;
+
     // Регулируемые шансы выпадения %
     const chances = {
       zero: 0,
@@ -60,10 +64,6 @@ const getRandomPrize = async (telegramId, spins) => {
     let selectedPrize = { name: "0", link: null, caption: null };
     let prizeLink = null;
 
-    // Для отладки, если когда-то захотим жёстко указать группу/приз:
-    let groupname = null; // пример: хотим искать приз в группе "gamesport1"
-    let nameingroupname = null; // пример: хотим найти приз "iphone" в этой группе
-
     if (prizeType === "prize") {
       let finalPrizeData = null;
       if (groupname && nameingroupname) {
@@ -89,23 +89,20 @@ const getRandomPrize = async (telegramId, spins) => {
 
       console.log(finalPrizeData);
       if (finalPrizeData) {
-        const replacedLink = finalPrizeData.link
+        prizeLink = finalPrizeData.link
           .replace("{click_id}", encodeURIComponent(user.click_id))
           .replace("{telegram_id}", encodeURIComponent(user.telegramId));
-        console.log(replacedLink);
         selectedPrize = {
           name: finalPrizeData.name,
-          link: replacedLink,
+          link: prizeLink,
           caption: finalPrizeData.caption,
         };
-        console.log(selectedPrize);
-
-        // await sendHello(
-        //   user.telegramId,
-        //   selectedPrize.name,
-        //   selectedPrize.link,
-        //   selectedPrize.caption
-        // );
+        await sendHello(
+          user.telegramId,
+          selectedPrize.name,
+          selectedPrize.link,
+          selectedPrize.caption
+        );
       }
     }
 
