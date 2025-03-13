@@ -96,12 +96,12 @@ const getRandomPrize = async (telegramId) => {
     } else {
       prizeLink = null;
     }
-    
+
     if (prizeType === "prize") {
       await sendHello(
         telegramId, 
         selectedPrize.name, 
-        selectedPrize.link, 
+        prizeLink,
         selectedPrize.caption
       );
     }
