@@ -1,4 +1,4 @@
-//apppostroutes
+// routes/appPostRoutes.js
 const checkSubscription = require("../utils/checkSubscription")
 const User = require("../models/User");
 const projects = require('../tasks/tasks');

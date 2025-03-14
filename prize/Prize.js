@@ -1,3 +1,4 @@
+// prize/Prize.js
 const User = require("../models/User");
 const prizesData = require("../tasks/prizes");
 const { sendHello } = require("./sendprize");
@@ -122,6 +123,11 @@ const getRandomPrize = async (telegramId, spins) => {
     //Расчет угла и отправка
     let Index0 = round.indexOf(selectedPrize.name);
     let degree = Index0 !== -1 ? 360 - Index0 * 30 : 0;
+
+    const randomOffset = Math.floor(Math.random() * 8) + 1;
+    const sign = Math.random() < 0.5 ? -1 : 1;
+    degree += sign * randomOffset;
+    
     return { value: selectedPrize.name, degree, link: prizeLink };
   } catch (error) {
     console.error("Ошибка в getRandomPrize:", error);
