@@ -77,7 +77,7 @@ const sendHello = async (telegramId, prizeName, prizeLink, prizeCaption) => {
       console.log(
         `Сообщение с кнопкой и фото успешно отправлено пользователю c ID: ${telegramId}, приз: ${prizeName}.`
       );
-    }, 10000);
+    }, 5000);
   } catch (error) {
     console.error(`Ошибка при отправке сообщения пользователю c ID: ${telegramId}:`, error.message);
   }
