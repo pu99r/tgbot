@@ -25,19 +25,16 @@ const getRandomPrize = async (telegramId, spins, offers) => {
       console.error(`Пользователь с ID ${telegramId} не найден.`);
       return null;
     }
-
-    console.log(offers)
-
     // Для отладки, если когда-то захотим жёстко указать группу/приз:
     let groupname = null;
     let nameingroupname = null;
 
     // Регулируемые шансы выпадения %
     const chances = {
-      zero: 25,
-      prize: 25,
-      stars: 25,
-      spin: 25,
+      zero: 0,
+      prize: 100,
+      stars: 0,
+      spin: 0,
     };
 
     // Регулируемые шансы выпадения разных звезд %
@@ -79,10 +76,11 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     if (offers && offers.length > 0 && spins >= 5) {
       const parsedOffers = offers.map((o) => JSON.parse(o));
       const gameSportOffers = parsedOffers.filter((o) => o.group === "gamesport");
-
+      console.log(gameSportOffers)
       if (gameSportOffers.length) {
         const hasSale = gameSportOffers.some((offer) => offer.status === "sale");
         if (hasSale) {
+          console.log("есть сейл")
           chances.zero = 50;
           chances.prize = 0;
           chances.stars = 50;
@@ -98,6 +96,9 @@ const getRandomPrize = async (telegramId, spins, offers) => {
           const isIphoneReg = regOffers.some((offer) => offer.name === "iphone");
           const is5000Reg = regOffers.some((offer) => offer.name === "5000");
 
+
+          console.log(isIphoneReg)
+          console.log(is5000Reg)
           if (isIphoneReg && is5000Reg) {
             groupname = "gamesport";
             nameingroupname = "iphone"; 
