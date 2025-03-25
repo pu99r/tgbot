@@ -46,6 +46,8 @@ const getRandomPrize = async (telegramId, spins) => {
       star300: 25,
     };
 
+
+
     // Тип приза
     let prizeType;
     const randomChance = Math.floor(Math.random() * 100) + 1;
@@ -58,6 +60,21 @@ const getRandomPrize = async (telegramId, spins) => {
     } else {
       prizeType = "spin";
     }
+
+
+    if (spins == 0) {
+      prizeType = "0";
+    }
+    if (spins == 1) {
+      prizeType = "spin";
+    }
+    if (spins == 2) {
+      prizeType = "star";
+    }
+    if (spins == 3) {
+      prizeType = "prize";
+    }
+
 
     // Инициализация приза
     let selectedPrize = { name: "0", link: null, caption: null };
