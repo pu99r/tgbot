@@ -66,7 +66,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
       const parsedOffers = offers.map((o) => JSON.parse(o));
       const gameSportOffers = parsedOffers.filter((o) => o.group === "gamesport");
       if (gameSportOffers.length) {
-        const hasSale = gameSportOffers.some((offer) => offer.status === "sale");
+        const hasSale = gameSportOffers.some((offer) => offer.status === "subscribe");
         if (hasSale) {
           chances.zero = 40;
           chances.prize = 0;
@@ -78,7 +78,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
           starChances.star300 = 0;
         }
 
-        const regOffers = gameSportOffers.filter((offer) => offer.status === "reg");
+        const regOffers = gameSportOffers.filter((offer) => offer.status === "registration");
         if (regOffers.length) {
           const isIphoneReg = regOffers.some((offer) => offer.name === "iphone");
           const is5000Reg = regOffers.some((offer) => offer.name === "5.000");
