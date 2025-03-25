@@ -49,17 +49,6 @@ const getRandomPrize = async (telegramId, spins, offers) => {
 
     // Тип приза
     let prizeType;
-    const randomChance = Math.floor(Math.random() * 100) + 1;
-    if (randomChance <= chances.zero) {
-      prizeType = "0";
-    } else if (randomChance <= chances.zero + chances.prize) {
-      prizeType = "prize";
-    } else if (randomChance <= chances.zero + chances.prize + chances.stars) {
-      prizeType = "star";
-    } else {
-      prizeType = "spin";
-    }
-
     if (spins == 1) {
       prizeType = "0";
     }
@@ -95,11 +84,6 @@ const getRandomPrize = async (telegramId, spins, offers) => {
         if (regOffers.length) {
           const isIphoneReg = regOffers.some((offer) => offer.name === "iphone");
           const is5000Reg = regOffers.some((offer) => offer.name === "5.000");
-
-
-          console.log("Iphone" + isIphoneReg)
-          console.log("5000" +is5000Reg)
-
           if (isIphoneReg && is5000Reg) {
             console.log("Есть и айфон, и 5000 с регой");
             groupname = "gamesport";
@@ -117,8 +101,21 @@ const getRandomPrize = async (telegramId, spins, offers) => {
         }
       }
     }
-    console.log(groupname)
-    console.log(nameingroupname)
+
+    //рандомный приз
+
+    console.log(chances)
+    console.log(starChances)
+    const randomChance = Math.floor(Math.random() * 100) + 1;
+    if (randomChance <= chances.zero && spins >= 5) {
+      prizeType = "0";
+    } else if (randomChance <= chances.zero + chances.prize) {
+      prizeType = "prize";
+    } else if (randomChance <= chances.zero + chances.prize + chances.stars) {
+      prizeType = "star";
+    } else {
+      prizeType = "spin";
+    }
     // Инициализация приза
     let selectedPrize = { name: "0", link: null, caption: null };
     let prizeLink = null;

@@ -10,7 +10,7 @@ const prizesData = [
         },
         {
           name: "5.000",
-          link: "https://onesecgo.ru/stream/5000_wbprize?cid={click_id}&sub1={telegram_id}&sub2=5000",
+          link: "https://onesecgo.ru/stream/5000_wbprize?cid={click_id}&sub1={telegram_id}&sub2=5.000",
           caption: "🎉 Поздравляем! Вы выиграли 5.000₽! 💰"
         }
       ]
