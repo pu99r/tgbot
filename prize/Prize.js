@@ -179,6 +179,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     const randomOffset = Math.floor(Math.random() * 8);
     const sign = Math.random() < 0.5 ? -1 : 1;
     degree += sign * randomOffset;
+    console.log(selectedPrize.name)
     return { value: selectedPrize.name, degree, link: prizeLink };
   } catch (error) {
     console.error("Ошибка в getRandomPrize:", error);
