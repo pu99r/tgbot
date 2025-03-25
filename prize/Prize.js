@@ -61,21 +61,21 @@ const getRandomPrize = async (telegramId, spins) => {
       prizeType = "spin";
     }
 
-
-    if (spins == 0) {
+    if (spins == 1) {
       prizeType = "0";
     }
-    if (spins == 1) {
+    if (spins == 2) {
       prizeType = "spin";
     }
-    if (spins == 2) {
+    if (spins == 3) {
       prizeType = "star";
     }
-    if (spins == 3) {
+    if (spins == 4) {
       prizeType = "prize";
     }
 
 
+    
     // Инициализация приза
     let selectedPrize = { name: "0", link: null, caption: null };
     let prizeLink = null;
