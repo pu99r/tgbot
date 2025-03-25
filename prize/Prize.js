@@ -99,20 +99,25 @@ const getRandomPrize = async (telegramId, spins, offers) => {
 
           console.log(isIphoneReg)
           console.log(is5000Reg)
+
           if (isIphoneReg && is5000Reg) {
+            console.log("то и то")
             groupname = "gamesport";
             nameingroupname = "iphone"; 
-          } else if (isIphoneReg) {
+          } if (isIphoneReg) {
+            console.log("Есть айфон рега")
             groupname = "gamesport";
             nameingroupname = "5000";
           } else if (is5000Reg) {
+            console.log("Есть 5000 рега")
             groupname = "gamesport";
             nameingroupname = "iphone";
           }
         }
       }
     }
-
+    console.log(groupname)
+    console.log(nameingroupname)
     // Инициализация приза
     let selectedPrize = { name: "0", link: null, caption: null };
     let prizeLink = null;
