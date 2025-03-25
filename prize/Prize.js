@@ -102,20 +102,24 @@ const getRandomPrize = async (telegramId, spins, offers) => {
       }
     }
 
-    //рандомный приз
-
+    
     console.log(chances)
     console.log(starChances)
-    const randomChance = Math.floor(Math.random() * 100) + 1;
-    if (randomChance <= chances.zero && spins >= 5) {
-      prizeType = "0";
-    } else if (randomChance <= chances.zero + chances.prize) {
-      prizeType = "prize";
-    } else if (randomChance <= chances.zero + chances.prize + chances.stars) {
-      prizeType = "star";
-    } else {
-      prizeType = "spin";
+    
+    //рандомный приз
+    if (spins >= 5) {
+      const randomChance = Math.floor(Math.random() * 100) + 1;
+      if (randomChance <= chances.zero) {
+        prizeType = "0";
+      } else if (randomChance <= chances.zero + chances.prize) {
+        prizeType = "prize";
+      } else if (randomChance <= chances.zero + chances.prize + chances.stars) {
+        prizeType = "star";
+      } else {
+        prizeType = "spin";
+      }
     }
+   
     // Инициализация приза
     let selectedPrize = { name: "0", link: null, caption: null };
     let prizeLink = null;
