@@ -20,7 +20,9 @@ const handleStart = async (bot, msg, match) => {
       if (params[0] === "ref") {
         const referrerTelegramId = params[1];
         try {
-          const referrer = await User.findOne({ telegramId: referrerTelegramId });
+          const referrer = await User.findOne({
+            telegramId: referrerTelegramId,
+          });
           if (referrer) {
             referredBy = referrer._id;
             logger.info(
@@ -76,7 +78,12 @@ const handleStart = async (bot, msg, match) => {
 };
 
 // -- ОТПРАВКА ОСНОВНОГО СООБЩЕНИЯ (ОСТАВЛЕНА ПО ПРОСЬБЕ) --
-const sendMainFunctionalityMessage = async (bot, chatId, user, messageId = null) => {
+const sendMainFunctionalityMessage = async (
+  bot,
+  chatId,
+  user,
+  messageId = null
+) => {
   // Если передан messageId, то удаляем старое сообщение (если нужно)
   if (messageId) {
     try {
@@ -91,8 +98,8 @@ const sendMainFunctionalityMessage = async (bot, chatId, user, messageId = null)
     const referralsCount = await User.countDocuments({ referredBy: user._id });
     const userReferralCode = `ref_${user.telegramId}`;
     const referralLink = `https://t.me/${process.env.BOT_USERNAME}?start=${userReferralCode}`;
-    
-    user.spins = user.spins || 0; 
+
+    user.spins = user.spins || 0;
     await user.save();
 
     // 1. Парсим данные из offercomplete
@@ -101,7 +108,7 @@ const sendMainFunctionalityMessage = async (bot, chatId, user, messageId = null)
     let offercompleteInfo = "";
     if (Array.isArray(user.offercomplete) && user.offercomplete.length > 0) {
       // Преобразуем каждый элемент в объект
-      const parsedOffers = user.offercomplete.map(item => {
+      const parsedOffers = user.offercomplete.map((item) => {
         try {
           return JSON.parse(item);
         } catch (err) {
@@ -115,13 +122,21 @@ const sendMainFunctionalityMessage = async (bot, chatId, user, messageId = null)
         .map((offer, index) => {
           // Если удалось распарсить как объект со структурой {group, name, status}
           if (offer.group && offer.name && offer.status) {
-            return `   ${index + 1}. Группа: <b>${offer.group}</b>, Название: <b>${offer.name}</b>, Статус: <b>${offer.status}</b>`;
+            return `   ${index + 1}. Группа: <b>${
+              offer.group
+            }</b>, Название: <b>${offer.name}</b>, Статус: <b>${
+              offer.status
+            }</b>`;
           } else if (offer.raw) {
             // Если это "сырые" данные, которые не удалось распарсить
-            return `   ${index + 1}. (Не удалось распарсить) <b>${offer.raw}</b>`;
+            return `   ${index + 1}. (Не удалось распарсить) <b>${
+              offer.raw
+            }</b>`;
           }
           // На случай, если какой-то объект не по формату, но без поля raw
-          return `   ${index + 1}. (Неизвестный формат) <b>${JSON.stringify(offer)}</b>`;
+          return `   ${index + 1}. (Неизвестный формат) <b>${JSON.stringify(
+            offer
+          )}</b>`;
         })
         .join("\n");
     } else {
@@ -165,8 +180,14 @@ ${offercompleteInfo}
       text: "Отзывы",
       url: process.env.OTZOVCHANNEL,
     };
+
+    const manager = {
+      text: "Менеджер",
+      url: process.env.MANAGER,
+    };
+
     const replyMarkup = {
-      inline_keyboard: [[webAppButton], [newsButton, reviewsButton]],
+      inline_keyboard: [[webAppButton], [manager], [newsButton, reviewsButton]],
     };
 
     // 4. Отправка изображения и сообщения
@@ -178,7 +199,9 @@ ${offercompleteInfo}
       reply_markup: replyMarkup,
     });
 
-    logger.info(`Основное сообщение с изображением отправлено пользователю ${chatId}.`);
+    logger.info(
+      `Основное сообщение с изображением отправлено пользователю ${chatId}.`
+    );
   } catch (error) {
     logger.error("Ошибка в sendMainFunctionalityMessage:", error);
     await bot.sendMessage(
