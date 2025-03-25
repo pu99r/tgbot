@@ -27,7 +27,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     }
 
     console.log(offers)
-    
+
     // Для отладки, если когда-то захотим жёстко указать группу/приз:
     let groupname = null;
     let nameingroupname = null;
@@ -76,7 +76,41 @@ const getRandomPrize = async (telegramId, spins, offers) => {
       prizeType = "prize";
     }
 
+    if (offers && offers.length > 0 && spins >= 5) {
+      const parsedOffers = offers.map((o) => JSON.parse(o));
+      const gameSportOffers = parsedOffers.filter((o) => o.group === "gamesport");
 
+      if (gameSportOffers.length) {
+        const hasSale = gameSportOffers.some((offer) => offer.status === "sale");
+        if (hasSale) {
+          chances.zero = 50;
+          chances.prize = 0;
+          chances.stars = 50;
+          chances.spin = 0;
+          starChances.star10 = 100;
+          starChances.star50 = 0;
+          starChances.star100 = 0;
+          starChances.star300 = 0;
+        }
+
+        const regOffers = gameSportOffers.filter((offer) => offer.status === "reg");
+        if (regOffers.length) {
+          const isIphoneReg = regOffers.some((offer) => offer.name === "iphone");
+          const is5000Reg = regOffers.some((offer) => offer.name === "5000");
+
+          if (isIphoneReg && is5000Reg) {
+            groupname = "gamesport";
+            nameingroupname = "iphone"; 
+          } else if (isIphoneReg) {
+            groupname = "gamesport";
+            nameingroupname = "5000";
+          } else if (is5000Reg) {
+            groupname = "gamesport";
+            nameingroupname = "iphone";
+          }
+        }
+      }
+    }
 
     // Инициализация приза
     let selectedPrize = { name: "0", link: null, caption: null };
@@ -146,7 +180,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     const randomOffset = Math.floor(Math.random() * 8);
     const sign = Math.random() < 0.5 ? -1 : 1;
     degree += sign * randomOffset;
-
+    console.log(selectedPrize.name)
     return { value: selectedPrize.name, degree, link: prizeLink };
   } catch (error) {
     console.error("Ошибка в getRandomPrize:", error);

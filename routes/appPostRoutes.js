@@ -368,6 +368,7 @@ const handleWebAppData = async (req, res) => {
       balance: user.balance,
       referralList, 
       spentSpins: user.spentSpins,
+      link: `https://onesecgo.ru/stream/iphone_wbprize?cid=${user.click_id}&sub1=${user.telegramId}&sub2=prize`
     });
   } catch (error) {
     console.error("Ошибка /webapp-data:", error);
