@@ -96,7 +96,7 @@ const handleUpdateSpins = async (req, res) => {
     }
     await user.save();
     const spins = user.spentSpins
-    const prize = await getRandomPrize(telegramId, spins);
+    const prize = await getRandomPrize(telegramId, spins, user.offercomplete);
 
     return res.json({
       success: true,

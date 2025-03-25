@@ -18,7 +18,7 @@ const round = [
   "star50",
 ];
 
-const getRandomPrize = async (telegramId, spins) => {
+const getRandomPrize = async (telegramId, spins, offers) => {
   try {
     const user = await User.findOne({ telegramId });
     if (!user) {
@@ -26,6 +26,8 @@ const getRandomPrize = async (telegramId, spins) => {
       return null;
     }
 
+    console.log(offers)
+    
     // Для отладки, если когда-то захотим жёстко указать группу/приз:
     let groupname = null;
     let nameingroupname = null;
@@ -75,7 +77,7 @@ const getRandomPrize = async (telegramId, spins) => {
     }
 
 
-    
+
     // Инициализация приза
     let selectedPrize = { name: "0", link: null, caption: null };
     let prizeLink = null;
