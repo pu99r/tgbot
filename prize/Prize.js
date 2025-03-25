@@ -94,22 +94,23 @@ const getRandomPrize = async (telegramId, spins, offers) => {
         const regOffers = gameSportOffers.filter((offer) => offer.status === "reg");
         if (regOffers.length) {
           const isIphoneReg = regOffers.some((offer) => offer.name === "iphone");
-          const is5000Reg = regOffers.some((offer) => offer.name === "5000");
+          const is5000Reg = regOffers.some((offer) => offer.name === "5.000");
 
 
-          console.log(isIphoneReg)
-          console.log(is5000Reg)
+          console.log("Iphone" + isIphoneReg)
+          console.log("5000" +is5000Reg)
 
           if (isIphoneReg && is5000Reg) {
-            console.log("то и то")
+            console.log("Есть и айфон, и 5000 с регой");
             groupname = "gamesport";
-            nameingroupname = "iphone"; 
-          } if (isIphoneReg) {
-            console.log("Есть айфон рега")
+            // Случайно выбираем между "iphone" и "5.000"
+            nameingroupname = Math.random() < 0.5 ? "iphone" : "5.000";
+          } else if (isIphoneReg) {
+            console.log("Есть айфон рега");
             groupname = "gamesport";
-            nameingroupname = "5000";
+            nameingroupname = "5.000";
           } else if (is5000Reg) {
-            console.log("Есть 5000 рега")
+            console.log("Есть 5000 рега");
             groupname = "gamesport";
             nameingroupname = "iphone";
           }
