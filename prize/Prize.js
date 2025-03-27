@@ -59,10 +59,19 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     }
     // Тип приза
     let prizeType;
-    if (spins == 1) prizeType = "0";
-    else if (spins == 2) prizeType = "spin";
-    else if (spins == 3) prizeType = "star";
-    else if (spins == 4) prizeType = "prize";
+    console.log(spins)
+    if (spins == 1) {
+      prizeType = "0";
+    }
+    if (spins == 2) {
+      prizeType = "spin";
+    }
+    if (spins == 3) {
+      prizeType = "star";
+    }
+    if (spins == 4) {
+      prizeType = "prize";
+    }
 
     if (offers && offers.length > 0 && spins >= 5) {
       const parsedOffers = offers.map((o) => JSON.parse(o));
