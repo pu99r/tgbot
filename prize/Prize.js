@@ -36,7 +36,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
       stars: 10,
       spin: 20,
     };
-
+    
     // Регулируемые шансы выпадения разных звезд %
     const starChances = {
       star10: 70,
@@ -45,8 +45,18 @@ const getRandomPrize = async (telegramId, spins, offers) => {
       star300: 0,
     };
 
-
-
+    function getRandomByChance(chances) {
+      const total = Object.values(chances).reduce((sum, val) => sum + val, 0);
+      const rand = Math.random() * total;
+      let cumulative = 0;
+    
+      for (const [key, value] of Object.entries(chances)) {
+        cumulative += value;
+        if (rand < cumulative) {
+          return key;
+        }
+      }
+    }
     // Тип приза
     let prizeType;
     if (spins == 1) {
@@ -101,16 +111,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
 
     //рандомный приз
     if (spins >= 5) {
-      const randomChance = Math.floor(Math.random() * 100) + 1;
-      if (randomChance <= chances.zero) {
-        prizeType = "0";
-      } else if (randomChance <= chances.zero + chances.prize) {
-        prizeType = "prize";
-      } else if (randomChance <= chances.zero + chances.prize + chances.stars) {
-        prizeType = "star";
-      } else {
-        prizeType = "spin";
-      }
+      prizeType = getRandomByChance(chances);
     }
    
     // Инициализация приза
