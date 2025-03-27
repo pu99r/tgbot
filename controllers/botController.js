@@ -20,9 +20,7 @@ const handleStart = async (bot, msg, match) => {
       if (params[0] === "ref") {
         const referrerTelegramId = params[1];
         try {
-          const referrer = await User.findOne({
-            telegramId: referrerTelegramId,
-          });
+          const referrer = await User.findOne({ telegramId: referrerTelegramId });
           if (referrer) {
             referredBy = referrer._id;
             logger.info(
@@ -67,7 +65,30 @@ const handleStart = async (bot, msg, match) => {
       }
     }
 
+    // Проверяем, подписан ли пользователь на основной канал
+    let userSubbed = false;
+    try {
+      const member = await bot.getChatMember(process.env.MAINCHANNEL_ID, chatId);
+      if (
+        member.status === "member" ||
+        member.status === "creator" ||
+        member.status === "administrator"
+      ) {
+        userSubbed = true;
+      }
+    } catch (error) {
+      // Ошибка при проверке подписки — например, если бот не админ в канале
+      // или если канал закрыт. Логируем, чтобы не прерывать остальную логику.
+      logger.error("Ошибка при проверке подписки:", error);
+    }
+
+    // 1. Отправляем главное сообщение
     await sendMainFunctionalityMessage(bot, chatId, user);
+
+    // 2. Если пользователь не подписан, предлагаем подписаться и получить бонус
+    if (!userSubbed && !user.complete.includes("MainChanel1")) {
+      await sendBonusSubscriptionMessage(bot, chatId);
+    }
   } catch (error) {
     logger.error("Ошибка при обработке команды /start:", error);
     await bot.sendMessage(
@@ -77,7 +98,7 @@ const handleStart = async (bot, msg, match) => {
   }
 };
 
-// -- ОТПРАВКА ОСНОВНОГО СООБЩЕНИЯ (ОСТАВЛЕНА ПО ПРОСЬБЕ) --
+// -- ОТПРАВКА ОСНОВНОГО СООБЩЕНИЯ --
 const sendMainFunctionalityMessage = async (
   bot,
   chatId,
@@ -216,7 +237,74 @@ const setupBotHandlers = (bot) => {
   bot.onText(/\/start(?: (.+))?/, (msg, match) => {
     handleStart(bot, msg, match);
   });
+  bot.on("callback_query", async (query) => {
+    const { message, data, from } = query;
+    const chatId = message.chat.id;
+  
+    if (data === "check_mainchannel_sub") {
+      try {
+        const member = await bot.getChatMember(process.env.MAINCHANNEL_ID, from.id);
+  
+        if (
+          member.status === "member" ||
+          member.status === "creator" ||
+          member.status === "administrator"
+        ) {
+          const user = await User.findOne({ telegramId: chatId });
+  
+          // Проверка, чтобы не начислить повторно
+          if (!user.complete.includes("MainChanel1")) {
+            user.spins += 3;
+            user.complete.push("MainChanel1");
+            await user.save();
+  
+            await bot.deleteMessage(chatId, message.message_id);
+            await bot.sendMessage(chatId, "✅ Спасибо за подписку! Вам начислено +3 спина.");
+          } else {
+            await bot.sendMessage(chatId, "⚠️ Вы уже получили бонус за подписку.");
+          }
+        } else {
+          await bot.answerCallbackQuery(query.id, {
+            text: "Вы не подписались на канал. Пожалуйста, подпишитесь и попробуйте снова.",
+            show_alert: true
+          });
+        }
+      } catch (err) {
+        logger.error("Ошибка при проверке подписки:", err);
+        await bot.sendMessage(chatId, "⚠️ Не удалось проверить подписку. Попробуйте позже.");
+      }
+    }
+  });
+};
+// -- БОНУС --
+const sendBonusSubscriptionMessage = async (bot, chatId) => {
+  const checkSubscriptionButton = {
+    text: "✅ Проверить подписку",
+    callback_data: "check_mainchannel_sub",
+  };
+  const channelButton = {
+    text: "📢 Перейти в канал",
+    url: process.env.MAINCHANNEL,
+  };
+
+  const replyMarkup = {
+    inline_keyboard: [[channelButton], [checkSubscriptionButton]],
+  };
+
+  const message = `
+<b>🎁 Получи +3 спина!</b>
+
+Подпишись на наш <a href="${process.env.MAINCHANNEL}">новостной канал</a> и получи <b>3 спина</b> на баланс!
+
+После подписки нажми "✅ Проверить подписку".
+`;
+
+  const sentMessage = await bot.sendMessage(chatId, message, {
+    parse_mode: "HTML",
+    reply_markup: replyMarkup,
+  });
+
+  return sentMessage.message_id;
 };
 
-
-module.exports = { setupBotHandlers, sendMainFunctionalityMessage };
+module.exports = { setupBotHandlers, sendMainFunctionalityMessage, sendBonusSubscriptionMessage};
