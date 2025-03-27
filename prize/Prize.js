@@ -82,6 +82,8 @@ const getRandomPrize = async (telegramId, spins, offers) => {
         if (regOffers.length) {
           const isIphoneReg = regOffers.some((offer) => offer.name === "iphone");
           const is5000Reg = regOffers.some((offer) => offer.name === "5.000");
+          console.log(isIphoneReg)
+          console.log(is5000Reg)
           if (isIphoneReg && is5000Reg) {
             groupname = "gamesport";
             nameingroupname = Math.random() < 0.5 ? "iphone" : "5.000";
