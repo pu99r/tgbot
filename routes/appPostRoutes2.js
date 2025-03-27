@@ -1,9 +1,8 @@
 // routes/appPostRoutes.js
-const checkSubscription = require("../utils/checkSubscription");
+const checkSubscription = require("../utils/checkSubscription")
 const User = require("../models/User");
 const projects = require('../tasks/tasks');
 const getRandomPrize = require("../prize/Prize");
-
 
 const parseInitData = (initData) => {
   try {
@@ -25,86 +24,7 @@ const formatDate = (date) => {
   )}:${pad(date.getSeconds())}`;
 };
 
-const checkSubscriptionsForUser = async (telegramId) => {
-  const user = await User.findOne({ telegramId });
-  if (!user) {
-    // Если нужно, можно выбрасывать ошибку, пусть наверху ловится
-    throw new Error("Пользователь не найден для checkSubscriptionsForUser");
-  }
-
-  const botToken = process.env.TELEGRAM_TOKEN;
-  const tasksToShow = [];
-
-  for (const project of projects) {
-    // Если этот проект уже был выполнен, пропускаем
-    if (user.complete.includes(project.shortName)) {
-      continue;
-    }
-
-    // Проверяем, есть ли у проекта id (значит, нужно проверять подписку)
-    if (project.id) {
-      const isSubscribed = await checkSubscription(botToken, telegramId, project.id);
-      if (isSubscribed) {
-        // Пользователь подписан → добавляем проект в "complete"
-        user.complete.push(project.shortName);
-
-        // Начисляем награду
-        switch (project.prize) {
-          case "spins3":
-            user.spins += 3;
-            break;
-          case "balance3":
-            user.balance += 3;
-            break;
-          default:
-            break;
-        }
-      } else {
-        // Пользователь ещё не подписан → выводим этот проект
-        tasksToShow.push({ ...project });
-      }
-    } else {
-      // Если у проекта нет id, подписку не проверяем, просто выводим
-      tasksToShow.push({ ...project });
-    }
-  }
-
-  // Сохраняем обновлённые данные о пользователе
-  await user.save();
-
-  // Возвращаем список «незавершенных» заданий
-  return tasksToShow;
-};
-
-const handleTask = async (req, res) => {
-  try {
-    const { initData } = req.body;
-    if (!initData) {
-      return res
-        .status(400)
-        .json({ success: false, message: "initData не передан." });
-    }
-
-    const userObj = parseInitData(initData);
-    if (!userObj) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Невалидный initData." });
-    }
-
-    const telegramId = userObj.id;
-    // Вызываем чистую функцию
-    const tasksToShow = await checkSubscriptionsForUser(telegramId);
-
-    return res.status(200).json({ success: true, projects: tasksToShow });
-  } catch (error) {
-    console.error("Ошибка /tasks:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Внутренняя ошибка сервера." });
-  }
-};
-
+//Обновление количества спинов (вращений)
 const handleUpdateSpins = async (req, res) => {
   try {
     const { initData, operation } = req.body;
@@ -139,21 +59,28 @@ const handleUpdateSpins = async (req, res) => {
         .json({ success: false, message: "Пользователь не найден." });
     }
 
-    if (user.spins <= 0) {
+    let spinslef = user.spins
+
+    if ( spinslef <= 0 ) {
       return res.json({
         success: false,
         message: `Нет спинов`,
       });
     }
 
-    // if (operation === "plus") { ... } 
+    // if (operation === "plus") {
+    //   user.spins = user.spins + 1;
+    // } else {
+    //   user.spins = user.spins -1;
+    //   user.spentSpins = user.spentSpins + 1; 
+    // }
+
     if (operation === "minus") {
-      user.spins -= 1;
-      user.spentSpins += 1; 
+      user.spins = user.spins -1;
+      user.spentSpins = user.spentSpins + 1; 
     }
 
-    // Если 3 спина израсходовал — бонус рефереру
-    if (user.spentSpins === 3) {
+    if (user.spentSpins == 3) {
       const referrer = await User.findById(user.referredBy);
       if (referrer) {
         referrer.balance += 10;
@@ -168,13 +95,8 @@ const handleUpdateSpins = async (req, res) => {
       }
     }
     await user.save();
-
-    // Выдаём приз
-    const prize = await getRandomPrize(
-      telegramId,
-      user.spentSpins,
-      user.offercomplete
-    );
+    const spins = user.spentSpins
+    const prize = await getRandomPrize(telegramId, spins, user.offercomplete);
 
     return res.json({
       success: true,
@@ -194,6 +116,7 @@ const handleUpdateSpins = async (req, res) => {
   }
 };
 
+//Добавление подарочного спина и установка даты регистрации
 const handleGift = async (req, res) => {
   try {
     const { initData } = req.body;
@@ -239,6 +162,81 @@ const handleGift = async (req, res) => {
   }
 };
 
+//Получение доступных заданий для пользователя (сравнение с user.complete)
+const handleTask = async (req, res) => {
+  try {
+    const { initData } = req.body;
+    if (!initData) {
+      return res
+        .status(400)
+        .json({ success: false, message: "initData не передан." });
+    }
+
+    const userObj = parseInitData(initData);
+    if (!userObj) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Невалидный initData." });
+    }
+
+    // Use userObj.id (Telegram ID) to find the user
+    const telegramId = userObj.id;
+    const user = await User.findOne({ telegramId });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Пользователь не найден." });
+    }
+
+    const botToken = process.env.TELEGRAM_TOKEN;
+    const tasksToShow = [];
+
+    for (const project of projects) {
+      // Если этот проект уже был выполнен пользователем, пропускаем
+      if (user.complete.includes(project.shortName)) {
+        continue;
+      }
+      // Проверяем, есть ли у проекта id (значит, нужно проверять подписку)
+      if (project.id) {
+        const isSubscribed = await checkSubscription(botToken, telegramId, project.id);
+        if (isSubscribed) {
+          // Пользователь подписан → добавляем проект в "complete"
+          user.complete.push(project.shortName);
+
+          // Начисляем награду
+          switch (project.prize) {
+            case "spins3":
+              user.spins += 3;
+              break;
+            case "balance3":
+              user.balance += 3;
+              break;
+            default:
+              break;
+          }
+        } else {
+          // Пользователь ещё не подписан → выводим этот проект, используя готовую ссылку
+          tasksToShow.push({ ...project });
+        }
+      } else {
+        // Если у проекта нет id, подписку не проверяем, просто выводим
+        tasksToShow.push({ ...project });
+      }
+    }
+
+    // Сохраняем обновлённые данные о пользователе (complete, spins, balance)
+    await user.save();
+
+    return res.status(200).json({ success: true, projects: tasksToShow });
+  } catch (error) {
+    console.error("Ошибка /tasks:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Внутренняя ошибка сервера." });
+  }
+};
+
+//Добавялет задачу или группу user.complete https://bestx.cam/update-complete/?telegramid=1370034279&group=group&name=name&status=status
 const updateComplete = async (req, res) => {
   try {
     const { telegramid, group, name, status } = req.query;
@@ -260,10 +258,12 @@ const updateComplete = async (req, res) => {
     }
 
     // Преобразуем текущее содержимое offercomplete в массив объектов
+    // (каждый элемент в offercomplete хранится в виде JSON-строки)
     const currentOffers = user.offercomplete.map((item) => {
       try {
         return JSON.parse(item);
       } catch (err) {
+        // Если вдруг запись некорректная – можно обработать
         return null;
       }
     });
@@ -274,18 +274,24 @@ const updateComplete = async (req, res) => {
     );
 
     if (existingOffer) {
-      // Обновляем status
+      // Если запись уже была, обновляем только status
       existingOffer.status = status;
     } else {
       // Если это новая запись, добавляем её в массив
-      currentOffers.push({ group, name, status });
+      currentOffers.push({
+        group,
+        name,
+        status,
+      });
     }
 
-    // Стрингифицируем все объекты обратно
+    // Стрингифицируем все объекты обратно в JSON-строки для хранения в offercomplete
     user.offercomplete = currentOffers.map((o) => JSON.stringify(o));
 
+    // Сохраняем изменения
     await user.save();
 
+    // Возвращаем ответ
     return res.json({
       success: true,
       message: "Запись обновлена/добавлена в offercomplete",
@@ -299,6 +305,7 @@ const updateComplete = async (req, res) => {
   }
 };
 
+//Все о пользователе
 const handleWebAppData = async (req, res) => {
   try {
     const { initData } = req.body;
@@ -317,24 +324,18 @@ const handleWebAppData = async (req, res) => {
 
     const telegramId = userObj.id;
 
-    // Сначала проверяем подписки (аналогично тому, что делает handleTask)
-    await checkSubscriptionsForUser(telegramId);
-
-    // Теперь находим пользователя и формируем ответ
-    const user = await User.findOne({ telegramId }).populate(
-      "referrals",
-      "username"
-    );
+    // Находим пользователя
+    const user = await User.findOne({ telegramId }).populate("referrals", "username");
     if (!user) {
       return res
         .status(404)
         .json({ success: false, message: "Пользователь не найден." });
     }
 
-    // Ре-феральный код
+    // Формируем реферальный код
     const userReferralCode = `ref_${user.telegramId}`;
 
-    // Список приглашённых с их статусами
+    // Функция, которая собирает информацию о каждом приглашённом пользователе
     const getAllReferrals = async (userDoc) => {
       return Promise.all(
         userDoc.referrals.map(async (referral) => {
@@ -346,21 +347,25 @@ const handleWebAppData = async (req, res) => {
               status: status
             };
           }
-          return null;
+          return null; 
         })
       );
     };
 
     const referralList = await getAllReferrals(user);
 
-    return res.send({
+    // Логируем результат, если нужно
+    // console.log("referralList:", referralList);
+
+    // Возвращаем ответ
+    res.send({
       success: true,
       referralCode: userReferralCode,
       botUsername: process.env.BOT_USERNAME,
       spins: user.spins,
       registrationDate: user.registrationDate,
       balance: user.balance,
-      referralList,
+      referralList, 
       spentSpins: user.spentSpins,
       link: `https://onesecgo.ru/stream/iphone_wbprize?cid=${user.click_id}&sub1=${user.telegramId}&sub2=prize`
     });

@@ -261,7 +261,11 @@ const setupBotHandlers = (bot) => {
             await bot.deleteMessage(chatId, message.message_id);
             await bot.sendMessage(chatId, "✅ Спасибо за подписку! Вам начислено +3 спина.");
           } else {
-            await bot.sendMessage(chatId, "⚠️ Вы уже получили бонус за подписку.");
+            await bot.deleteMessage(chatId, message.message_id);
+            await bot.answerCallbackQuery(query.id, {
+              text: "⚠️ Вы уже получили бонус за подписку.",
+              show_alert: true
+            });
           }
         } else {
           await bot.answerCallbackQuery(query.id, {
