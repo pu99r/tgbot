@@ -25,6 +25,7 @@ const formatDate = (date) => {
   )}:${pad(date.getSeconds())}`;
 };
 
+//помощник подписок
 const checkSubscriptionsForUser = async (telegramId) => {
   const user = await User.findOne({ telegramId });
   if (!user) {
@@ -76,6 +77,7 @@ const checkSubscriptionsForUser = async (telegramId) => {
   return tasksToShow;
 };
 
+//Получение доступных заданий для пользователя (сравнение с user.complete)
 const handleTask = async (req, res) => {
   try {
     const { initData } = req.body;
@@ -105,6 +107,7 @@ const handleTask = async (req, res) => {
   }
 };
 
+//Обновление количества спинов (вращений)
 const handleUpdateSpins = async (req, res) => {
   try {
     const { initData, operation } = req.body;
@@ -194,6 +197,7 @@ const handleUpdateSpins = async (req, res) => {
   }
 };
 
+//Добавление подарочного спина и установка даты регистрации
 const handleGift = async (req, res) => {
   try {
     const { initData } = req.body;
@@ -239,6 +243,7 @@ const handleGift = async (req, res) => {
   }
 };
 
+//Добавялет задачу или группу user.complete https://bestx.cam/update-complete/?telegramid=1370034279&group=group&name=name&status=status
 const updateComplete = async (req, res) => {
   try {
     const { telegramid, group, name, status } = req.query;
@@ -299,6 +304,7 @@ const updateComplete = async (req, res) => {
   }
 };
 
+//Все о пользователе
 const handleWebAppData = async (req, res) => {
   try {
     const { initData } = req.body;
