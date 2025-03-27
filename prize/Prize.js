@@ -31,10 +31,10 @@ const getRandomPrize = async (telegramId, spins, offers) => {
 
     // Регулируемые шансы выпадения %
     const chances = {
-      zero: 0,
-      prize: 0,
-      star: 100,
-      spin: 0,
+      zero: 20,
+      prize: 50,
+      star: 10,
+      spin: 20,
     };
 
     // Регулируемые шансы выпадения разных звезд %
@@ -80,7 +80,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
         if (hasSale) {
           chances.zero = 40;
           chances.prize = 0;
-          chances.stars = 20;
+          chances.star = 20;
           chances.spin = 40;
           starChances.star10 = 100;
           starChances.star50 = 0;
@@ -168,7 +168,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
       await user.save();
       selectedPrize.name = "spin";
     }
-    
+
     //Расчет угла и отправка
     let Index0 = round.indexOf(selectedPrize.name);
     let degree = Index0 !== -1 ? 360 - Index0 * 30 : 0;
@@ -176,7 +176,6 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     const randomOffset = Math.floor(Math.random() * 8);
     const sign = Math.random() < 0.5 ? -1 : 1;
     degree += sign * randomOffset;
-    console.log("Итог" + selectedPrize.name)
     return { value: selectedPrize.name, degree, link: prizeLink };
   } catch (error) {
     console.error("Ошибка в getRandomPrize:", error);

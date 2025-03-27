@@ -379,7 +379,6 @@ const handleWebAppData = async (req, res) => {
   }
 };
 
-
 module.exports = {
   handleWebAppData,
   handleUpdateSpins,

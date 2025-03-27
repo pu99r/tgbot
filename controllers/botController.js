@@ -218,4 +218,5 @@ const setupBotHandlers = (bot) => {
   });
 };
 
+
 module.exports = { setupBotHandlers, sendMainFunctionalityMessage };
