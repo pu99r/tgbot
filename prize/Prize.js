@@ -31,10 +31,10 @@ const getRandomPrize = async (telegramId, spins, offers) => {
 
     // Регулируемые шансы выпадения %
     const chances = {
-      zero: 20,
-      prize: 50,
-      stars: 10,
-      spin: 20,
+      zero: 0,
+      prize: 0,
+      stars: 100,
+      spin: 0,
     };
 
     // Регулируемые шансы выпадения разных звезд %
