@@ -59,7 +59,6 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     }
     // Тип приза
     let prizeType;
-    console.log(spins)
     if (spins == 1) {
       prizeType = "0";
     }
@@ -111,7 +110,9 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     }
     //рандомный приз
     if (spins >= 5) {
+      console.log(chances)
       prizeType = getRandomByChance(chances);
+      console.log(prizeType)
     }
    
     // Инициализация приза
@@ -179,7 +180,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     const randomOffset = Math.floor(Math.random() * 8);
     const sign = Math.random() < 0.5 ? -1 : 1;
     degree += sign * randomOffset;
-    console.log(selectedPrize.name)
+    console.log("Итог" + selectedPrize.name)
     return { value: selectedPrize.name, degree, link: prizeLink };
   } catch (error) {
     console.error("Ошибка в getRandomPrize:", error);
