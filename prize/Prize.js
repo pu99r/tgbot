@@ -33,7 +33,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     const chances = {
       zero: 0,
       prize: 0,
-      stars: 100,
+      star: 100,
       spin: 0,
     };
 
@@ -92,8 +92,6 @@ const getRandomPrize = async (telegramId, spins, offers) => {
         if (regOffers.length) {
           const isIphoneReg = regOffers.some((offer) => offer.name === "iphone");
           const is5000Reg = regOffers.some((offer) => offer.name === "5.000");
-          console.log(isIphoneReg)
-          console.log(is5000Reg)
           if (isIphoneReg && is5000Reg) {
             groupname = "gamesport";
             nameingroupname = Math.random() < 0.5 ? "iphone" : "5.000";
@@ -110,9 +108,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     }
     //рандомный приз
     if (spins >= 5) {
-      console.log(chances)
       prizeType = getRandomByChance(chances);
-      console.log(prizeType)
     }
    
     // Инициализация приза
@@ -172,7 +168,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
       await user.save();
       selectedPrize.name = "spin";
     }
-
+    
     //Расчет угла и отправка
     let Index0 = round.indexOf(selectedPrize.name);
     let degree = Index0 !== -1 ? 360 - Index0 * 30 : 0;
