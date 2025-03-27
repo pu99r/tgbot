@@ -36,7 +36,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
       stars: 10,
       spin: 20,
     };
-    
+
     // Регулируемые шансы выпадения разных звезд %
     const starChances = {
       star10: 70,
@@ -59,18 +59,10 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     }
     // Тип приза
     let prizeType;
-    if (spins == 1) {
-      prizeType = "0";
-    }
-    if (spins == 2) {
-      prizeType = "spin";
-    }
-    if (spins == 3) {
-      prizeType = "star";
-    }
-    if (spins == 4) {
-      prizeType = "prize";
-    }
+    if (spins == 1) prizeType = "0";
+    else if (spins == 2) prizeType = "spin";
+    else if (spins == 3) prizeType = "star";
+    else if (spins == 4) prizeType = "prize";
 
     if (offers && offers.length > 0 && spins >= 5) {
       const parsedOffers = offers.map((o) => JSON.parse(o));
@@ -108,7 +100,6 @@ const getRandomPrize = async (telegramId, spins, offers) => {
         }
       }
     }
-
     //рандомный приз
     if (spins >= 5) {
       prizeType = getRandomByChance(chances);
@@ -159,13 +150,10 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     }
 
     if (prizeType === "star") {
-      const starPool = Object.entries(starChances).flatMap(([star, weight]) =>
-        Array(weight).fill(star)
-      );
-      selectedPrize.name =
-        starPool[Math.floor(Math.random() * starPool.length)];
-      const balanceToAdd = parseInt(selectedPrize.name.replace("star", ""));
+      const selectedStar = getRandomByChance(starChances);
+      const balanceToAdd = parseInt(selectedStar.replace("star", ""));
       user.balance += balanceToAdd;
+      selectedPrize.name = selectedStar;
       await user.save();
     }
 
