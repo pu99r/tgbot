@@ -76,7 +76,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
       const parsedOffers = offers.map((o) => JSON.parse(o));
       const gameSportOffers = parsedOffers.filter((o) => o.group === "gamesport");
       if (gameSportOffers.length) {
-        const hasSale = gameSportOffers.some((offer) => offer.status === "subscribe");
+        const hasSale = gameSportOffers.some((offer) => offer.status === "first_buy");
         if (hasSale) {
           chances.zero = 40;
           chances.prize = 0;
