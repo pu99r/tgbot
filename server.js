@@ -21,7 +21,6 @@ const PORT = process.env.PORT || 3000;
 const REQUIRED_ENV = [
   "TELEGRAM_TOKEN",
   "BOT_USERNAME",
-  "MONGODB_URL",
   "WEB_APP_URL",
   "MAINCHANNEL",
   "OTZOVCHANNEL"
@@ -36,9 +35,19 @@ if (missingEnv.length > 0) {
   process.exit(1);
 }
 
+const {
+  MONGODB_USERNAME,
+  MONGODB_PASSWORD,
+  MONGODB_HOST,
+  MONGODB_PORT,
+  MONGODB_DBNAME,
+} = process.env;
+
+const mongoURL = `mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DBNAME}?authSource=admin&directConnection=true`;
+
 mongoose
-  .connect(process.env.MONGODB_URL, {
-    maxPoolSize: 10, // до 10 подключений
+  .connect(mongoURL, {
+    maxPoolSize: 10,
   })
   .then(() => logger.info("MongoDB подключена"))
   .catch((err) => {
