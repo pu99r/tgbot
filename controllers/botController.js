@@ -13,6 +13,7 @@ const handleStart = async (bot, msg, match) => {
 
   let referredBy = null;
   let clickId = "none";
+  let webmaster = "none";
 
   if (match[1]) {
     const params = match[1].split("_");
@@ -20,7 +21,9 @@ const handleStart = async (bot, msg, match) => {
       if (params[0] === "ref") {
         const referrerTelegramId = params[1];
         try {
-          const referrer = await User.findOne({ telegramId: referrerTelegramId });
+          const referrer = await User.findOne({
+            telegramId: referrerTelegramId,
+          });
           if (referrer) {
             referredBy = referrer._id;
             logger.info(
@@ -34,6 +37,9 @@ const handleStart = async (bot, msg, match) => {
         }
       } else if (params[0] === "kt") {
         clickId = params[1];
+        if (params.length >= 3) {
+          webmaster = params[2]; 
+        }
         logger.info(`Click ID найден: ${clickId}`);
       }
     }
@@ -49,6 +55,7 @@ const handleStart = async (bot, msg, match) => {
         referredBy,
         spins: 0,
         click_id: clickId,
+        webmaster
       });
       await user.save();
       logger.info(`Новый пользователь создан: ${username} (ID: ${chatId})`);
@@ -68,7 +75,10 @@ const handleStart = async (bot, msg, match) => {
     // Проверяем, подписан ли пользователь на основной канал
     let userSubbed = false;
     try {
-      const member = await bot.getChatMember(process.env.MAINCHANNEL_ID, chatId);
+      const member = await bot.getChatMember(
+        process.env.MAINCHANNEL_ID,
+        chatId
+      );
       if (
         member.status === "member" ||
         member.status === "creator" ||
@@ -181,7 +191,7 @@ const sendMainFunctionalityMessage = async (
 ${offercompleteInfo}
 `.trim();
 
-const message = `
+    const message = `
 🎉 <b>Добро пожаловать, ${user.username}!</b>
 
 <b>Stars Wheel</b> — ваш шанс испытать удачу и выиграть <b>ценные призы</b> каждый день!
@@ -248,42 +258,51 @@ const setupBotHandlers = (bot) => {
   bot.on("callback_query", async (query) => {
     const { message, data, from } = query;
     const chatId = message.chat.id;
-  
+
     if (data === "check_mainchannel_sub") {
       try {
-        const member = await bot.getChatMember(process.env.MAINCHANNEL_ID, from.id);
-  
+        const member = await bot.getChatMember(
+          process.env.MAINCHANNEL_ID,
+          from.id
+        );
+
         if (
           member.status === "member" ||
           member.status === "creator" ||
           member.status === "administrator"
         ) {
           const user = await User.findOne({ telegramId: chatId });
-  
+
           // Проверка, чтобы не начислить повторно
           if (!user.complete.includes("MainChanel1")) {
             user.spins += 3;
             user.complete.push("MainChanel1");
             await user.save();
-  
+
             await bot.deleteMessage(chatId, message.message_id);
-            await bot.sendMessage(chatId, "✅ Спасибо за подписку! Вам начислено +3 спина.");
+            await bot.sendMessage(
+              chatId,
+              "✅ Спасибо за подписку! Вам начислено +3 спина."
+            );
           } else {
             await bot.deleteMessage(chatId, message.message_id);
             await bot.answerCallbackQuery(query.id, {
               text: "⚠️ Вы уже получили бонус за подписку.",
-              show_alert: true
+              show_alert: true,
             });
           }
         } else {
           await bot.answerCallbackQuery(query.id, {
             text: "Вы не подписались на канал. Пожалуйста, подпишитесь и попробуйте снова.",
-            show_alert: true
+            show_alert: true,
           });
         }
       } catch (err) {
         logger.error("Ошибка при проверке подписки:", err);
-        await bot.sendMessage(chatId, "⚠️ Не удалось проверить подписку. Попробуйте позже.");
+        await bot.sendMessage(
+          chatId,
+          "⚠️ Не удалось проверить подписку. Попробуйте позже."
+        );
       }
     }
   });
@@ -319,4 +338,8 @@ const sendBonusSubscriptionMessage = async (bot, chatId) => {
   return sentMessage.message_id;
 };
 
-module.exports = { setupBotHandlers, sendMainFunctionalityMessage, sendBonusSubscriptionMessage};
+module.exports = {
+  setupBotHandlers,
+  sendMainFunctionalityMessage,
+  sendBonusSubscriptionMessage,
+};

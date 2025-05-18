@@ -1,9 +1,8 @@
 // routes/appPostRoutes.js
 const checkSubscription = require("../utils/checkSubscription");
 const User = require("../models/User");
-const projects = require('../tasks/tasks');
+const projects = require("../tasks/tasks");
 const getRandomPrize = require("../prize/Prize");
-
 
 const parseInitData = (initData) => {
   try {
@@ -44,7 +43,11 @@ const checkSubscriptionsForUser = async (telegramId) => {
 
     // Проверяем, есть ли у проекта id (значит, нужно проверять подписку)
     if (project.id) {
-      const isSubscribed = await checkSubscription(botToken, telegramId, project.id);
+      const isSubscribed = await checkSubscription(
+        botToken,
+        telegramId,
+        project.id
+      );
       if (isSubscribed) {
         // Пользователь подписан → добавляем проект в "complete"
         user.complete.push(project.shortName);
@@ -135,7 +138,7 @@ const handleUpdateSpins = async (req, res) => {
 
     const telegramId = userObj.id;
     const user = await User.findOne({ telegramId });
-    
+
     if (!user) {
       return res
         .status(404)
@@ -149,10 +152,10 @@ const handleUpdateSpins = async (req, res) => {
       });
     }
 
-    // if (operation === "plus") { ... } 
+    // if (operation === "plus") { ... }
     if (operation === "minus") {
       user.spins -= 1;
-      user.spentSpins += 1; 
+      user.spentSpins += 1;
     }
 
     // Если 3 спина израсходовал — бонус рефереру
@@ -165,7 +168,7 @@ const handleUpdateSpins = async (req, res) => {
           (r) => r.user.toString() === user._id.toString()
         );
         if (referralToUpdate) {
-          referralToUpdate.status = true; 
+          referralToUpdate.status = true;
         }
         await referrer.save();
       }
@@ -252,7 +255,8 @@ const updateComplete = async (req, res) => {
     if (!telegramid || !group || !name || !status) {
       return res.status(400).json({
         success: false,
-        message: "Необходимо передать параметры: telegramid, group, name, status",
+        message:
+          "Необходимо передать параметры: telegramid, group, name, status",
       });
     }
 
@@ -349,7 +353,7 @@ const handleWebAppData = async (req, res) => {
           if (referrerUser) {
             return {
               username: referrerUser.username,
-              status: status
+              status: status,
             };
           }
           return null;
@@ -358,6 +362,10 @@ const handleWebAppData = async (req, res) => {
     };
 
     const referralList = await getAllReferrals(user);
+    const linkForUser =
+      user.webmaster === "alex"
+        ? `https://justonesec.ru/stream/cpruearn204aa?cid=${user.click_id}&sub1=${user.telegramId}&sub2=prize`
+        : `https://onesecgo.ru/stream/iphone_wbprize?cid=${user.click_id}&sub1=${user.telegramId}&sub2=prize`;
 
     return res.send({
       success: true,
@@ -368,7 +376,7 @@ const handleWebAppData = async (req, res) => {
       balance: user.balance,
       referralList,
       spentSpins: user.spentSpins,
-      link: `https://onesecgo.ru/stream/iphone_wbprize?cid=${user.click_id}&sub1=${user.telegramId}&sub2=prize`
+      link: linkForUser
     });
   } catch (error) {
     console.error("Ошибка /webapp-data:", error);
@@ -384,5 +392,5 @@ module.exports = {
   handleUpdateSpins,
   handleGift,
   handleTask,
-  updateComplete
+  updateComplete,
 };

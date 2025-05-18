@@ -29,6 +29,7 @@ const UserSchema = new mongoose.Schema(
     complete: { type: [String], default: [] }, // Выполненные задания
     offercomplete: { type: [String], default: [] }, // Все об офферах на колесе
     click_id: { type: String, default: "none" }, //click_id из трекера
+    webmaster: { type: String, default: "none" },
     s1: { type: String, default: null }, // доп1
     s2: { type: String, default: null }, // доп2
     s3: { type: String, default: null }, // доп3

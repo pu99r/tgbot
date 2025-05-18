@@ -25,6 +25,9 @@ const getRandomPrize = async (telegramId, spins, offers) => {
       console.error(`Пользователь с ID ${telegramId} не найден.`);
       return null;
     }
+
+    const gameSportGroupName =
+      user.webmaster === "alex" ? "gamesport_alex" : "gamesport";
     // Для отладки, если когда-то захотим жёстко указать группу/приз:
     let groupname = null;
     let nameingroupname = null;
@@ -49,7 +52,7 @@ const getRandomPrize = async (telegramId, spins, offers) => {
       const total = Object.values(chances).reduce((sum, val) => sum + val, 0);
       const rand = Math.random() * total;
       let cumulative = 0;
-    
+
       for (const [key, value] of Object.entries(chances)) {
         cumulative += value;
         if (rand < cumulative) {
@@ -74,9 +77,13 @@ const getRandomPrize = async (telegramId, spins, offers) => {
 
     if (offers && offers.length > 0 && spins >= 5) {
       const parsedOffers = offers.map((o) => JSON.parse(o));
-      const gameSportOffers = parsedOffers.filter((o) => o.group === "gamesport");
+      const gameSportOffers = parsedOffers.filter(
+        (o) => o.group === gameSportGroupName
+      );
       if (gameSportOffers.length) {
-        const hasSale = gameSportOffers.some((offer) => offer.status === "first_buy");
+        const hasSale = gameSportOffers.some(
+         (offer) => offer.status === "first_buy"
+       );
         if (hasSale) {
           chances.zero = 40;
           chances.prize = 0;
@@ -88,19 +95,22 @@ const getRandomPrize = async (telegramId, spins, offers) => {
           starChances.star300 = 0;
         }
 
-        const regOffers = gameSportOffers.filter((offer) => offer.status === "registration");
+        const regOffers = gameSportOffers.filter(
+          (offer) => offer.status === "registration"
+        );
         if (regOffers.length) {
-          const isIphoneReg = regOffers.some((offer) => offer.name === "iphone");
+          const isIphoneReg = regOffers.some(
+            (offer) => offer.name === "iphone"
+          );
           const is5000Reg = regOffers.some((offer) => offer.name === "5.000");
           if (isIphoneReg && is5000Reg) {
-            groupname = "gamesport";
+            groupname = gameSportGroupName;
             nameingroupname = Math.random() < 0.5 ? "iphone" : "5.000";
           } else if (isIphoneReg) {
-
-            groupname = "gamesport";
+            groupname = gameSportGroupName;
             nameingroupname = "5.000";
           } else if (is5000Reg) {
-            groupname = "gamesport";
+            groupname = gameSportGroupName;
             nameingroupname = "iphone";
           }
         }
@@ -110,11 +120,11 @@ const getRandomPrize = async (telegramId, spins, offers) => {
     if (spins >= 5) {
       prizeType = getRandomByChance(chances);
     }
-   
+
     // Инициализация приза
     let selectedPrize = { name: "0", link: null, caption: null };
     let prizeLink = null;
-    
+
     //расчет для каждого
     if (prizeType === "prize") {
       let finalPrizeData = null;
